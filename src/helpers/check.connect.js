@@ -2,12 +2,14 @@ const  mongoose = require('mongoose');
 const _SECONDS = 5000
 const os = require('os')
 const process = require('process')
+
 //check Connect
 const countConnect =()=>{
     const numConnections = mongoose.connections.length
     console.log(`Number of connections:: ${numConnections}`)
     return numConnections
 } 
+
 //check over load
 const checkOverload =()=>{
     setInterval( ()=>{
@@ -26,7 +28,6 @@ const checkOverload =()=>{
         }
     },_SECONDS)
 }
-
 
 module.exports ={
     countConnect,checkOverload

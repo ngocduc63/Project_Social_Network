@@ -8,10 +8,12 @@ const ReasonStatusCode ={
     FORBIDDEN : 'Bad request error',
     CONFLICT : 'Conflict error'
 } 
+
 const {
     StatusCodes,
     ReasonPhrases
 }=require('../utils/httpStatusCode')
+
 class ErrorResponse extends Error {
     constructor(message, status ) {
         super(message)

@@ -1,8 +1,8 @@
 'use strict';
 const JWT = require('jsonwebtoken') 
 const asyncHandler = require('../helpers/asyncHandler')
-const{ AuthFailureError,NotFoundError} = require('../core/error.response')
-const{findByUserId} =require('../services/keyToken.service')
+const { AuthFailureError, NotFoundError} = require('../core/error.response')
+const { findByUserId } =require('../services/keyToken.service')
 
 const HEADER = {
     API_KEY : 'x-api-key',
@@ -12,7 +12,7 @@ const HEADER = {
 
 const createTokenPair = async (payload, publicKey, privateKey) => {
  
-    try{
+    try {
         const  accessTocken = await JWT.sign(payload, publicKey, {
             // algorithm: 'RS256',
             expiresIn: '2 days'
@@ -31,26 +31,19 @@ const createTokenPair = async (payload, publicKey, privateKey) => {
       
         return { accessTocken, refreshToken }
 
-    }catch (error) {
+    } catch (error) {
         console.log('auth_create token',error);
-        
     }
-
-    
 }
-const  authentication =asyncHandler(async(req,res,next)=>{
+
+const  authentication = asyncHandler(async(req, res, next)=>{
     
     // 1-Check userId missing?
     const userId = req.headers[HEADER.CLIENT_ID]
-  
-    
     if(!userId) throw new AuthFailureError('Invalid Request')
 
     // 2- get accessToken
     const keyStore = await findByUserId(userId)
-    console.log('keyStore',keyStore);
-    
-    
     if(!keyStore) throw new NotFoundError('Not found keyStore')
 
     // 3- verify token
@@ -72,9 +65,9 @@ const  authentication =asyncHandler(async(req,res,next)=>{
     // 6- OK all => return next()
      
 })
-const  verifyJWT = async (token, keySecret) => {
-    return await JWT.verify(token, keySecret)
-}
+
+const  verifyJWT = async (token, keySecret) => await JWT.verify(token, keySecret)
+
 // const verifyJWT = (token, keySecret) => {
 //     try {
 //         return JWT.verify(token, keySecret);
@@ -82,6 +75,7 @@ const  verifyJWT = async (token, keySecret) => {
 //         throw new Error('Invalid token');
 //     }
 // };
+
 module.exports = { 
     createTokenPair,
     authentication,

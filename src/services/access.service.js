@@ -6,10 +6,11 @@ const crypto = require('node:crypto')
 const {createTokenPair,verifyJWT} = require('../auth/authUtils')
 const { getInfoData } = require('../utils');
 const {findByEmail}= require('./shop.service')
-const { BadRequestError,ConflictError,ForbiddenError,AuthFailureError } = require("../core/error.response");
+const { BadRequestError, ConflictError, ForbiddenError, AuthFailureError } = require("../core/error.response");
 const KeyTokenService = require("./keyToken.service");
 const { console } = require("node:inspector");
 const { keyBy } = require("lodash");
+
 const RoleShop ={
     SHOP:'SHOP',
     WRITER:'WRITER',
@@ -57,7 +58,6 @@ class AccessService {
             user: { userId, email },
             tokens
         }
-
     }   
 
     static logout = async (keyStore) => {
@@ -94,72 +94,64 @@ class AccessService {
         return{
             shop :getInfoData({fileds:['_id','name','email'], object: foundShop}),
             tokens
-              }
-    // 5- get data return login
+        }
+        // 5- get data return login
         
     }
 
-
-     
     static signUp = async ({name , email, password}) => { 
         // try { 
-            //step 1 check gamil
-            const holedShop = await shopModel.findOne({ email }).lean()
+        //step 1 check gamil
+        const holedShop = await shopModel.findOne({ email }).lean()
 
-            if (holedShop) { 
+        if (holedShop) { 
 
-                    throw new BadRequestError('Error: Shop already registered!')
-            }
-            console.log('newshop:', { name, email, password, roles:[RoleShop.SHOP]});
+                throw new BadRequestError('Error: Shop already registered!')
+        }
+        console.log('newshop:', { name, email, password, roles:[RoleShop.SHOP]});
 
-            const passwordHash = await bcrypt.hash(password, 10)
-            
+        const passwordHash = await bcrypt.hash(password, 10)
+        
 
-            const  newShop = await shopModel.create({
+        const  newShop = await shopModel.create({
 
-                name, email, password: passwordHash, roles:[RoleShop.SHOP]
-            })
+            name, email, password: passwordHash, roles:[RoleShop.SHOP]
+        })
 
-            if(newShop) {
-           
+        if(newShop) {
+                const privateKey = crypto.randomBytes(64).toString('hex');
+                const publicKey = crypto.randomBytes(64).toString('hex');
 
-                  const privateKey = crypto.randomBytes(64).toString('hex');
-                   const publicKey = crypto.randomBytes(64).toString('hex');
-            
+            console.log({ privateKey, publicKey })  
 
-                console.log({ privateKey, publicKey })  
-
-
-                    const   keyStore = await  KeyTokenService.createKeyToken({ 
-                        userId: newShop._id, 
-                        publicKey ,
-                        privateKey
-                    })
-
-                    
-                        if(!keyStore) {
-                            return  {
-                                code: 'xxx',
-                                message: 'keyStore error!',
-                                status: 'error'
-                        }
+                const   keyStore = await  KeyTokenService.createKeyToken({ 
+                    userId: newShop._id, 
+                    publicKey ,
+                    privateKey
+                })
+                    if(!keyStore) {
+                        return  {
+                            code: 'xxx',
+                            message: 'keyStore error!',
+                            status: 'error'
                     }
+                }
 
-
-                     const tokens = await createTokenPair({ userId: newShop._id, email },  publicKey, privateKey)
-                     console.log(`Created Token Success::`, tokens)
-                     return{
-                        metadata :{
-                            shop :getInfoData({fileds:['_id','name','email'], object: newShop}),
-                            tokens
-                        }
-                     }
-                    
-            }
-            return {
-                code :200,
-                metadata :null
-             }
+                    const tokens = await createTokenPair({ userId: newShop._id, email },  publicKey, privateKey)
+                    console.log(`Created Token Success::`, tokens)
+                    return{
+                    metadata :{
+                        shop :getInfoData({fileds:['_id','name','email'], object: newShop}),
+                        tokens
+                    }
+                    }
+        }
+        
+        return {
+            code :200,
+            metadata :null
+        }
     }
 }
+
 module.exports= AccessService

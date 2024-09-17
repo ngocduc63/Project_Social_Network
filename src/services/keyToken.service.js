@@ -4,7 +4,7 @@ const  { ObjectId }  = require('mongodb')
 
 // const { Types: { ObjectId } } = require('mongoose')
 class KeyTokenService{
-    static createKeyToken =     async ({ userId, publicKey,privateKey,refreshToken }) => {
+    static createKeyToken = async ({ userId, publicKey,privateKey,refreshToken }) => {
         
         try {
             //lv0
@@ -33,15 +33,19 @@ class KeyTokenService{
         
         return await keytokenModel.findOne({ user: objectId }).lean();
     }
+    
     static removeKeyById = async (id) => {
         return await keytokenModel.deleteOne({ _id: id });
     }
+
     static findByRefreshTokenUsed = async (refreshToken) => {
         return await keytokenModel.findOne({ refreshTokensUsed : refreshToken}).lean();
     }
+
     static findByRefreshToken = async (refreshToken) => {
         return await keytokenModel.findOne({  refreshToken });
     }
+
     static deleteKeyById = async (userId) => {
         return await keytokenModel.findByIdAndDelete({ user: userId })
     }
