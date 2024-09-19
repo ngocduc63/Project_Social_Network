@@ -1,7 +1,8 @@
 'use strict';
 
 const AccessService = require("../services/access.service");
-const {OK,CREATED,SuccessResponse} = require('..//core/success.response');
+const {OK,CREATED,SuccessResponse} = require('../core/success.response');
+
 class AccessController{
 
   handlerRefreshToken = async (req, res, next) => {
@@ -26,7 +27,6 @@ class AccessController{
   }
 
   signUp = async (req, res, next) => {
-    console.log('data:', req.body)
     new CREATED({
       message: 'Register OK',
       metadata: await AccessService.signUp(req.body),
@@ -35,6 +35,6 @@ class AccessController{
       }
     }).send(res)
   }
-        
 }
+
 module.exports = new AccessController()

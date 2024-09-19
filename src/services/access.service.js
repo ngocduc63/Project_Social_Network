@@ -8,8 +8,6 @@ const { getInfoData } = require('../utils');
 const {findByEmail}= require('./shop.service')
 const { BadRequestError, ConflictError, ForbiddenError, AuthFailureError } = require("../core/error.response");
 const KeyTokenService = require("./keyToken.service");
-const { console } = require("node:inspector");
-const { keyBy } = require("lodash");
 
 const RoleShop ={
     SHOP:'SHOP',
@@ -27,7 +25,6 @@ class AccessService {
         if(foundToken){
             //decode  xem ai 
             const {userId, email} =  await verifyJWT(refreshToken,foundToken.privateKey)
-            console.log( 'u,e 1-- ',{userId, email })
             //xoa tat ca token trong keystore
             await KeyTokenService.deleteKeyById(userId)
             throw new ForbiddenError('Something wrng happend !! Pls relogin' )
@@ -38,7 +35,7 @@ class AccessService {
 
         //veryfyToken
         const {userId, email} = await verifyJWT(refreshToken, holderToken.privateKey)
-        console.log('2--',{userId, email})
+
         //check userid
         const  foundShop = await findByEmail({email})
         if(!foundShop) throw new AuthFailureError('Shop not registered!')
@@ -154,4 +151,4 @@ class AccessService {
     }
 }
 
-module.exports= AccessService
+module.exports = AccessService

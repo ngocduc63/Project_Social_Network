@@ -21,10 +21,23 @@ var shopSchema = new Schema({
         type:String,
         required:true,
     },
-    Status:{
+    status:{
         type:String,
         enum:['active', 'inactive'],
         default: 'inactive',
+    },
+    gender:{
+        type:String,
+        enum:['Nam', 'Nữ'],
+        default: 'Nam',
+    },
+    avatar:{
+        type:String,
+        default: 'avt_default_male',
+    },
+    cover:{
+        type:String,
+        default: 'cover_default',
     },
     verfify:{
         type: mongoose.Schema.Types.Boolean,
