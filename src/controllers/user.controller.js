@@ -1,27 +1,21 @@
-'use strict'
+"use strict";
 
-const {OK,CREATED,SuccessResponse} = require('../core/success.response')
-const userService = require('../services/user.service')
+const { OK, CREATED, SuccessResponse } = require("../core/success.response");
+const userService = require("../services/user.service");
 
 class UserController {
+  updateAvatar = async (req, res, next) => {
+    const metadata = await userService.updateAvatarService(req.file, req.keyStore)
+    new SuccessResponse(metadata).send(res);
+  };
 
-    updateAvatar = async (req, res, next) => {
+  getImageUrl = async (req, res, next) => {
+    const imageStream = await userService.getImageUrl(req.params);
 
-        new SuccessResponse({
-            message: 'update avatar success',
-            metadata: await userService.updateAvatar(req.file, req.keyStore)
-        }).send(res)
-        
-    }
+    res.contentType("image/png");
 
-    getImageUrl = async (req, res, next) => {
-        const imageStream = await userService.getImageUrl(req.params)
-
-        res.contentType('image/png')
-        
-        imageStream.pipe(res)
-    }
-
+    imageStream.pipe(res);
+  };
 }
 
-module.exports = new UserController()
+module.exports = new UserController();
