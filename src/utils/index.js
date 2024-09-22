@@ -1,8 +1,8 @@
 'use strict';
 const _ = require('lodash');
-const { Types } = require('mongoose')
+const { ObjectId } = require("mongodb");
 
-const convertToObjectIdMongodb = id => Types.ObjectId(id)
+const convertToObjectIdMongodb = id => ObjectId.createFromHexString(id)
 
 const  getInfoData =({ fileds = [], object ={}})=>
 {

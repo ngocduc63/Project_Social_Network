@@ -1,8 +1,7 @@
 "use strict";
 const keytokenModel = require("../models/keytoken.model");
-const { ObjectId } = require("mongodb");
+const { convertToObjectIdMongodb } = require("../utils");
 
-// const { Types: { ObjectId } } = require('mongoose')
 class KeyTokenService {
   static createKeyToken = async ({
     userId,
@@ -32,9 +31,7 @@ class KeyTokenService {
   };
 
   static findByUserId = async (userId) => {
-    const objectId = ObjectId.createFromHexString(userId);
-
-    return await keytokenModel.findOne({ user: objectId }).lean();
+    return await keytokenModel.findOne({ user: convertToObjectIdMongodb(userId) }).lean();
   };
 
   static removeKeyById = async (id) => {
