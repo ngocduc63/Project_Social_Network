@@ -29,7 +29,7 @@ class UserService {
     if (!rs.acknowledged) throw new BadRequestError("update avatar error");
 
     return {
-      user: getInfoData({ fileds: ["_id", "name", "avatar"], object: user }),
+      user: getInfoData({ fileds: ["_id", "name", "avatar"], object: rs }),
     };
   };
 
