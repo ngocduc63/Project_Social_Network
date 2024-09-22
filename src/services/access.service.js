@@ -13,6 +13,7 @@ const {
   AuthFailureError,
 } = require("../core/error.response");
 const KeyTokenService = require("./keyToken.service");
+const { createNewApiKey } = require("./apikey.service");
 
 const RoleUser = {
   USER: "USER",
@@ -111,12 +112,16 @@ class AccessService {
       userId,
     });
 
+    // create permission key
+    const apiKey = await createNewApiKey()
+
     return {
       user: getInfoData({
         fileds: ["_id", "name", "email"],
         object: foundUser,
       }),
       tokens,
+      apikey: getInfoData({ fileds: ['key'], object: apiKey})
     };
     // 5- get data return login
   };

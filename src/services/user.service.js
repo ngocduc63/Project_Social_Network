@@ -24,6 +24,8 @@ class UserService {
       { _id: keyStore.user },
       { avatar: file.filename }
     );
+
+    // check update success
     if (!rs.acknowledged) throw new BadRequestError("update avatar error");
 
     return {
@@ -40,6 +42,4 @@ class UserService {
   };
 }
 
-
-
-module.exports = UserService
+module.exports = UserService;

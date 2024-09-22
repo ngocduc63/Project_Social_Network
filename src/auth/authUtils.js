@@ -15,11 +15,11 @@ const createTokenPair = async (payload, publicKey, privateKey) => {
     try {
         const  accessTocken = await JWT.sign(payload, publicKey, {
             // algorithm: 'RS256',
-            expiresIn: '2 days'
+            expiresIn: '1 days'
         })
         const refreshToken = await JWT.sign(payload, privateKey, {
             // algorithm: 'RS256',
-            expiresIn: '7 days'
+            expiresIn: '14 days'
         })  
         
         JWT.verify(accessTocken, publicKey, (err, decode) => {
@@ -67,14 +67,6 @@ const  authentication = asyncHandler(async(req, res, next)=>{
 })
 
 const  verifyJWT = async (token, keySecret) => await JWT.verify(token, keySecret)
-
-// const verifyJWT = (token, keySecret) => {
-//     try {
-//         return JWT.verify(token, keySecret);
-//     } catch (error) {
-//         throw new Error('Invalid token');
-//     }
-// };
 
 module.exports = { 
     createTokenPair,
