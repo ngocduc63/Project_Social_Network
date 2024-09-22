@@ -15,6 +15,11 @@ const apiKeySchema = new Schema(
       type: Boolean,
       default: true,
     },
+    user:{
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'User'
+    },
     permissions: {
       type: [String],
       required: true,

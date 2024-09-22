@@ -113,7 +113,7 @@ class AccessService {
     });
 
     // create permission key
-    const apiKey = await createNewApiKey()
+    const apiKey = await createNewApiKey(userId)
 
     return {
       user: getInfoData({
@@ -139,6 +139,7 @@ class AccessService {
       password: passwordHash,
       roles: [RoleUser.USER],
     });
+    if(!newUser) throw new BadRequestError("Error: cannot create user!");
 
     if (newUser) {
       const privateKey = crypto.randomBytes(64).toString("hex");
@@ -148,7 +149,8 @@ class AccessService {
         userId: newUser._id,
         publicKey,
         privateKey,
-      });
+      })
+
       if (!keyStore) throw new BadRequestError("key store error");
 
       const tokens = await createTokenPair(
@@ -156,6 +158,7 @@ class AccessService {
         publicKey,
         privateKey
       );
+
       return {
         metadata: {
           user: getInfoData({
@@ -164,14 +167,10 @@ class AccessService {
           }),
           tokens,
         },
-      };
+      }
     }
 
-    return {
-      code: 200,
-      metadata: null,
-    };
-  };
+  }
 }
 
 module.exports = AccessService;

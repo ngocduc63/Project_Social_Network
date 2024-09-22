@@ -17,13 +17,14 @@ class KeyTokenService {
           refreshTokensUsed: [],
           refreshToken,
         },
-        opstions = { upsert: true, new: true };
+        options = { upsert: true, new: true };
 
       const tokens = await keytokenModel.findOneAndUpdate(
         filter,
         update,
-        opstions
+        options
       );
+      
       return tokens ? tokens.publicKey : null;
     } catch (error) {
       return error;
