@@ -2,6 +2,7 @@
 
 const express = require('express');
 const postController = require('../../controllers/post.controller');
+const commentController  = require('../../controllers/comment.controller')
 const {asyncHandler} = require('../../auth/checkAuth');
 // const { uploadFileHandler } = require('../../helpers/uploadFIleHandler');
 const { authentication } = require('../../auth/authUtils');
@@ -19,5 +20,7 @@ router.use(permission('0000'))
 router.use(authentication)
 
 router.post('/create-post', asyncHandler(postController.createPost))
+router.post('/create-comment', asyncHandler(commentController.createComment))
+router.get('/get-comments-by-parent-id', asyncHandler(commentController.getCommentsByParentId))
 
 module.exports = router

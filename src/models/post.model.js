@@ -1,8 +1,8 @@
 "use strict";
 const { model, Schema, Types } = require("mongoose");
 
-const DOCUMENT_NAME = "Product"; // The name of the collection
-const COLLECTION_NAME = "Products"; // The name of the collection
+const DOCUMENT_NAME = "Post"; // The name of the collection
+const COLLECTION_NAME = "Posts"; // The name of the collection
 
 // category for save image: 0:normal, 1: avatar, 2: cover
 // status: 0:private, 1:public, 2: friend
