@@ -50,7 +50,7 @@ class KeyTokenService {
   };
 
   static deleteKeyById = async (userId) => {
-    return await keytokenModel.findByIdAndDelete({ user: userId });
+    return await keytokenModel.findOneAndDelete({ user: userId });
   };
 }
 

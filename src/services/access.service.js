@@ -42,7 +42,7 @@ class AccessService {
 
     //neu ko co
     const holderToken = await KeyTokenService.findByRefreshToken(refreshToken);
-    if (!holderToken) throw new AuthFailureError("Shop not registered");
+    if (!holderToken) throw new AuthFailureError("User not registered");
 
     //veryfyToken
     const { userId, email } = await verifyJWT(
@@ -51,7 +51,7 @@ class AccessService {
     );
 
     //check userid
-    const foundUser = await userService.userService.findByEmail({ email });
+    const foundUser = await userService.findByEmail({ email });
     if (!foundUser) throw new AuthFailureError("User not registered!");
 
     //create  cap token moi
@@ -113,7 +113,7 @@ class AccessService {
     });
 
     // create permission key
-    const apiKey = await createNewApiKey(userId)
+    const apiKey = await createNewApiKey(userId);
 
     return {
       user: getInfoData({
@@ -121,7 +121,7 @@ class AccessService {
         object: foundUser,
       }),
       tokens,
-      apikey: getInfoData({ fileds: ['key'], object: apiKey})
+      apikey: getInfoData({ fileds: ["key"], object: apiKey }),
     };
     // 5- get data return login
   };
@@ -139,7 +139,7 @@ class AccessService {
       password: passwordHash,
       roles: [RoleUser.USER],
     });
-    if(!newUser) throw new BadRequestError("Error: cannot create user!");
+    if (!newUser) throw new BadRequestError("Error: cannot create user!");
 
     if (newUser) {
       const privateKey = crypto.randomBytes(64).toString("hex");
@@ -149,7 +149,7 @@ class AccessService {
         userId: newUser._id,
         publicKey,
         privateKey,
-      })
+      });
 
       if (!keyStore) throw new BadRequestError("key store error");
 
@@ -167,10 +167,9 @@ class AccessService {
           }),
           tokens,
         },
-      }
+      };
     }
-
-  }
+  };
 }
 
 module.exports = AccessService;

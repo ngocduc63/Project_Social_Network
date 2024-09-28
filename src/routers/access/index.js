@@ -6,14 +6,14 @@ const {asyncHandler} = require('../../auth/checkAuth');
 const { authentication } = require('../../auth/authUtils');
 const router =  express.Router()
 
-router.post('/shop/signup', asyncHandler(accessController.signUp))
-router.post('/shop/login', asyncHandler(accessController.login))
+router.post('/signup', asyncHandler(accessController.signUp))
+router.post('/login', asyncHandler(accessController.login))
 
 // athentication middleware
 router.use(authentication)
 
-router.post('/shop/logout', asyncHandler(accessController.logout))
-router.post('/shop/handlerRefreshToken', asyncHandler(accessController.handlerRefreshToken))
+router.post('/logout', asyncHandler(accessController.logout))
+router.post('/refresh-token', asyncHandler(accessController.handlerRefreshToken))
 
 
 module.exports = router
