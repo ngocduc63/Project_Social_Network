@@ -6,6 +6,10 @@ class PostService {
   static async createPost(body) {
     return new Post(body).createPost();
   }
+
+  static async findPostById(idPost) {
+    return await post.findById(idPost);
+  }
 }
 
 class Post {

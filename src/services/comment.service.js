@@ -4,10 +4,11 @@ const Comment = require("../models/comment.model");
 const { convertToObjectIdMongodb } = require("../utils");
 const { NotFoundError } = require("../core/error.response");
 const UserService = require("./user.service");
+const PostService = require("./post.service");
 
 class CommemtService {
   static async createComment(
-    { postId, content, parentCommentId = null },
+    { postId, content, parentCommentId },
     keyStore
   ) {
     const userId = keyStore.user.toString();
@@ -16,7 +17,7 @@ class CommemtService {
       comment_postId: postId,
       comment_userId: userId,
       comment_content: content,
-      commnet_parentId: parentCommentId,
+      commnet_parentId: parentCommentId ? parentCommentId : null,
     });
 
     let rightValue;
@@ -165,6 +166,41 @@ class CommemtService {
       await this.findCommentByPostId(postId)
     );
     return comments;
+  }
+
+  static async deleteComment({postId, commentId}) {
+    const post = await PostService.findPostById(postId);
+    if (!post) throw new NotFoundError("Not found post");
+
+    const comment = await Comment.findById(commentId);
+    if (!comment) throw new NotFoundError("Not found comment");
+
+    const leftValue = comment.comment_left
+    const rightValue = comment.comment_right
+    const widtth = rightValue - leftValue + 1
+
+    // delete all comment child
+    await Comment.deleteMany({
+      comment_postId: convertToObjectIdMongodb(postId),
+      comment_left: {$gte: leftValue, $lte: rightValue}
+    })
+
+    // update left and right value
+    await Comment.updateMany({
+      comment_postId: convertToObjectIdMongodb(postId),
+      comment_right: {$gt: rightValue}
+    },{
+      $inc: {comment_right: -widtth}
+    })
+
+    await Comment.updateMany({
+      comment_postId: convertToObjectIdMongodb(postId),
+      comment_left: {$gt: rightValue}
+    },{
+      $inc: {comment_left: -widtth}
+    })
+
+    return true
   }
 }
 

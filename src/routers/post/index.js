@@ -22,5 +22,6 @@ router.use(authentication)
 router.post('/create-post', asyncHandler(postController.createPost))
 router.post('/create-comment', asyncHandler(commentController.createComment))
 router.get('/get-comments-by-parent-id', asyncHandler(commentController.getCommentsByParentId))
+router.delete('/delete-comment', asyncHandler(commentController.deleteComment))
 
 module.exports = router
