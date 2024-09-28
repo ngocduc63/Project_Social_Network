@@ -5,7 +5,7 @@ const CommentService = require('../services/comment.service')
 
 class CommentConstroller {
     createComment = async (req, res, next) => {
-        const metadata = await CommentService.createComment(req.body)
+        const metadata = await CommentService.createComment(req.body, req.keyStore)
         new SuccessResponse(metadata, 'Created Comment success!').send(res)
     }
 

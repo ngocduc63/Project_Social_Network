@@ -8,7 +8,7 @@ const COLLECTION_NAME = "Comments"; // The name of the collection
 var commentSchema = new Schema(
   {
     comment_postId: { type: Schema.Types.ObjectId, ref: "Post" },
-    commnet_userId: { type: Schema.Types.ObjectId, ref: "User" },
+    comment_userId: { type: Schema.Types.ObjectId, ref: "User" },
     comment_content: { type: String, default: "text" },
     comment_left: { type: Number, default: 0 },
     comment_right: { type: Number, default: 0 },

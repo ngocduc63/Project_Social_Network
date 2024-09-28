@@ -3,14 +3,15 @@
 const Comment = require("../models/comment.model");
 const { convertToObjectIdMongodb } = require("../utils");
 const { NotFoundError } = require("../core/error.response");
+const UserService = require("./user.service");
 
 class CommemtService {
-  static async createComment({
-    postId,
-    userId,
-    content,
-    parentCommentId = null,
-  }) {
+  static async createComment(
+    { postId, content, parentCommentId = null },
+    keyStore
+  ) {
+    const userId = keyStore.user.toString();
+    console.log("user", userId);
     const comment = new Comment({
       comment_postId: postId,
       comment_userId: userId,
@@ -53,20 +54,92 @@ class CommemtService {
         { sort: { comment_right: -1 } }
       );
 
-      console.log("max", maxRightValue);
-
       if (maxRightValue) {
         rightValue = maxRightValue.comment_right + 1;
       } else {
         rightValue = 1;
       }
-
-      comment.comment_left = rightValue;
-      comment.comment_right = rightValue + 1;
     }
+
+    comment.comment_left = rightValue;
+    comment.comment_right = rightValue + 1;
 
     await comment.save();
     return comment;
+  }
+
+  static async findCommentByParentId(postId, parentCommentId, parent) {
+    const comments = await Comment.find({
+      comment_postId: convertToObjectIdMongodb(postId),
+      commnet_parentId: convertToObjectIdMongodb(parentCommentId),
+      comment_left: { $gt: parent.comment_left },
+      comment_right: { $lte: parent.comment_right },
+    })
+      .select({
+        comment_left: 1,
+        comment_right: 1,
+        comment_content: 1,
+        comment_parentId: 1,
+        comment_userId: 1,
+      })
+      .sort({
+        comment_left: 1,
+      });
+
+    return comments;
+  }
+
+  static async findCommentByPostId(postId) {
+    const comments = await Comment.find({
+      comment_postId: convertToObjectIdMongodb(postId),
+      commnet_parentId: null,
+    })
+      .select({
+        comment_left: 1,
+        comment_right: 1,
+        comment_content: 1,
+        comment_parentId: 1,
+        comment_userId: 1,
+      })
+      .sort({
+        comment_left: 1,
+      });
+
+    return comments;
+  }
+
+  static async commentCountForParentId(postId, parentCommentId, parent) {
+    const commentCount = await Comment.countDocuments({
+      comment_postId: convertToObjectIdMongodb(postId),
+      commnet_parentId: convertToObjectIdMongodb(parentCommentId),
+      comment_left: { $gt: parent.comment_left },
+      comment_right: { $lte: parent.comment_right },
+    });
+
+    return commentCount;
+  }
+
+  static async getDataComments(postId, comments) {
+    const rs = [];
+    for (const comment of comments) {
+      const countChildComment = await this.commentCountForParentId(
+        postId,
+        comment.id,
+        comment
+      );
+
+      const userInfo = await UserService.getUserInfo(comment.comment_userId);
+
+      rs.push({
+        id: comment._id.toString(),
+        content: comment.comment_content,
+        parentId: comment.comment_parentId,
+        countChildComment,
+        userInfo,
+      });
+    }
+
+    return rs;
   }
 
   static async getCommentsByParentId({
@@ -79,38 +152,18 @@ class CommemtService {
       const parent = await Comment.findById(parentCommentId);
       if (!parent) throw new NotFoundError("Not found comment for post");
 
-      const comments = await Comment.find({
-        comment_postId: convertToObjectIdMongodb(postId),
-        comment_left: { $gt: parent.comment_left },
-        comment_right: { $lte: parent.comment_right },
-      })
-        .select({
-          comment_left: 1,
-          comment_right: 1,
-          comment_content: 1,
-          comment_parentId: 1,
-        })
-        .sort({
-          comment_left: 1,
-        });
+      const comments = this.getDataComments(
+        postId,
+        await this.findCommentByParentId(postId, parentCommentId, parent)
+      );
 
       return comments;
     }
 
-    const comments = await Comment.find({
-      comment_postId: convertToObjectIdMongodb(postId),
-      commnet_parentId: parentCommentId,
-    })
-      .select({
-        comment_left: 1,
-        comment_right: 1,
-        comment_content: 1,
-        comment_parentId: 1,
-      })
-      .sort({
-        comment_left: 1,
-      });
-
+    const comments = this.getDataComments(
+      postId,
+      await this.findCommentByPostId(postId)
+    );
     return comments;
   }
 }
