@@ -23,5 +23,6 @@ router.post('/create-post', asyncHandler(postController.createPost))
 router.post('/create-comment', asyncHandler(commentController.createComment))
 router.get('/get-comments-by-parent-id', asyncHandler(commentController.getCommentsByParentId))
 router.delete('/delete-comment', asyncHandler(commentController.deleteComment))
+router.post('/update-comment', asyncHandler(commentController.updateComment))
 
 module.exports = router

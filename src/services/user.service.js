@@ -56,6 +56,14 @@ class UserService {
     if (fs.existsSync(filepath)) return fs.createReadStream(filepath);
     else throw new BadRequestError("file not found");
   };
+
+  static updateProfile = async (body) => {
+    return true;
+  }
+
+  static changePassword = async (body) => {
+    return true;
+  }
 }
 
 module.exports = UserService;

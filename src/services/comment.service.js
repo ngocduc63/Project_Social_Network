@@ -202,6 +202,10 @@ class CommemtService {
 
     return true
   }
+
+  static async updateComment({commentId, content}){
+    return {'mess': 'success'}
+  }
 }
 
 module.exports = CommemtService;

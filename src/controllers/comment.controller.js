@@ -17,6 +17,10 @@ class CommentConstroller {
   deleteComment = async (req, res, next) => {
     new SuccessResponse(await CommentService.deleteComment(req.body)).send(res);
   };
+
+  updateComment = async (req, res, next) => {
+    new SuccessResponse(await CommentService.updateComment(req.body)).send(res);
+  }
 }
 
 module.exports = new CommentConstroller();
