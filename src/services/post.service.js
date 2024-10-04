@@ -1,10 +1,12 @@
 "user strict";
 
 const post = require("../models/post.model");
+const { NOTIFICATION_TYPES } = require("../utils/const.notification");
+const NotificationService = require("./notification.service");
 
 class PostService {
   static async createPost(body) {
-    return new Post(body).createPost();
+    return await new Post(body).createPost();
   }
   
   static async findPostById(idPost) {
@@ -39,7 +41,16 @@ class Post {
   }
 
   async createPost() {
-    return await post.create(this);
+    const newPost = await post.create(this);
+    if (newPost){
+      NotificationService.pushNotiToSystem({
+        type: NOTIFICATION_TYPES.CREATE_POST,
+        senderId: this.created_by_user,
+        receivedId: this.created_by_user,
+      }).then(rs => console.log(rs))
+    }
+
+    return newPost;
   }
 }
 
