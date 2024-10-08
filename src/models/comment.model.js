@@ -13,7 +13,6 @@ var commentSchema = new Schema(
     comment_left: { type: Number, default: 0 },
     comment_right: { type: Number, default: 0 },
     commnet_parentId: { type: Schema.Types.ObjectId, ref: DOCUMENT_NAME },
-    isDeleted: { type: Boolean, default: false },
   },
   {
     timestamps: true,

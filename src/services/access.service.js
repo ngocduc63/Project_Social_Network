@@ -14,12 +14,8 @@ const {
 } = require("../core/error.response");
 const KeyTokenService = require("./keyToken.service");
 const { createNewApiKey } = require("./apikey.service");
+const { ROLE_USER } = require("../utils/const.user");
 
-const RoleUser = {
-  USER: "USER",
-  EDITOR: "EDITOR",
-  ADMIN: "ADMIN",
-};
 
 class AccessService {
   static handlerRefreshToken = async (refreshToken) => {
@@ -137,7 +133,7 @@ class AccessService {
       name,
       email,
       password: passwordHash,
-      roles: [RoleUser.USER],
+      roles: [ROLE_USER.USER],
     });
     if (!newUser) throw new BadRequestError("Error: cannot create user!");
 

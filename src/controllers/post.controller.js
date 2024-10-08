@@ -5,7 +5,7 @@ const PostService = require("../services/post.service");
 
 class PostController {
   createPost = async (req, res, next) => {
-    const metadata = await PostService.createPost(req.body);
+    const metadata = await PostService.createPost(req.body, req.keyStore);
     new SuccessResponse(metadata, "Create post success").send(res);
   };
 }

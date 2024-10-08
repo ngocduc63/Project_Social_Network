@@ -7,6 +7,7 @@ const {asyncHandler} = require('../../auth/checkAuth');
 // const { uploadFileHandler } = require('../../helpers/uploadFIleHandler');
 const { authentication } = require('../../auth/authUtils');
 const { apiKey, permission } = require('../../auth/checkAuth');
+const likeController = require('../../controllers/like.controller');
 
 // const upload = uploadFileHandler()
 const router =  express.Router()
@@ -19,10 +20,15 @@ router.use(permission('0000'))
 // check access token
 router.use(authentication)
 
+router.get('/get-comments-by-parent-id', asyncHandler(commentController.getCommentsByParentId))
+
 router.post('/create-post', asyncHandler(postController.createPost))
 router.post('/create-comment', asyncHandler(commentController.createComment))
-router.get('/get-comments-by-parent-id', asyncHandler(commentController.getCommentsByParentId))
-router.delete('/delete-comment', asyncHandler(commentController.deleteComment))
+router.post('/create-like', asyncHandler(likeController.createLike))
+
 router.post('/update-comment', asyncHandler(commentController.updateComment))
+
+router.delete('/delete-comment', asyncHandler(commentController.deleteComment))
+router.delete('/delete-like', asyncHandler(likeController.deleteLike))
 
 module.exports = router

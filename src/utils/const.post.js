@@ -5,11 +5,21 @@ const POST_STATUS_TYPES = {
   GET_ALL: "ALL",
 };
 
-const POST_IMAGE_CATEFORY = {
+const POST_IMAGE_CATEGORY = {
   NORMAL_IAMGE: "NORMAL",
   AVATAR_IAMGE: "AVATAR",
   COVER_IAMGE: "COVER",
   GET_ALL: "ALL",
 };
 
-module.exports = { POST_STATUS_TYPES, POST_IMAGE_CATEFORY };
+const LIKE_CATEGORY = {
+    LIKE: "LIKE",
+    LOVE: "LOVE",
+    HAHA: "HAHA",
+    SAD: "SAD",
+    ANGRY: "ANGRY",
+    GET_ALL: "ALL",
+  };
+  
+
+module.exports = { POST_STATUS_TYPES, POST_IMAGE_CATEGORY, LIKE_CATEGORY };

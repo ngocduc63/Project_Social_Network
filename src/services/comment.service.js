@@ -180,7 +180,7 @@ class CommemtService {
     const rightValue = comment.comment_right;
     const width = rightValue - leftValue + 1;
     const num_comment_deleted = +(width / 2);
-    console.log('num', num_comment_deleted)
+    
     // delete all comment child
     await Comment.deleteMany({
       comment_postId: convertToObjectIdMongodb(postId),

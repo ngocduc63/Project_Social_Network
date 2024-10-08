@@ -3,11 +3,14 @@
 const post = require("../models/post.model");
 const { convertToObjectIdMongodb } = require("../utils");
 const { NOTIFICATION_TYPES } = require("../utils/const.notification");
-const { POST_STATUS_TYPES, POST_IMAGE_CATEFORY } = require("../utils/const.post");
+const { POST_STATUS_TYPES, POST_IMAGE_CATEGORY } = require("../utils/const.post");
 const NotificationService = require("./notification.service");
 
 class PostService {
-  static async createPost(body) {
+  static async createPost(body, keyStore) {
+    const userId = keyStore.user.toString();
+    body.created_by_user = userId;
+    
     return await new Post(body).createPost();
   }
   
@@ -34,6 +37,16 @@ class PostService {
     );
   }
 
+  static async updateNumLike(num, postId) {
+    await post.updateOne(
+      {
+        _id: convertToObjectIdMongodb(postId),
+      },
+      {
+        $inc: { post_num_like: num },
+      }
+    );
+  }
 }
 
 class Post {
@@ -41,7 +54,7 @@ class Post {
     post_title,
     created_by_user,
     post_image,
-    image_category = POST_IMAGE_CATEFORY.NORMAL_IAMGE,
+    image_category = POST_IMAGE_CATEGORY.NORMAL_IAMGE,
     post_status = POST_STATUS_TYPES.PUBLIC_POST,
     post_type,
   }) {
