@@ -23,17 +23,31 @@ var postSchema = new Schema(
       default: [],
     },
     image_category: {
-        type: Number,
-        default: 0,
+      type: String,
+      enum: ["NORMAL", "AVATAR", "COVER"],
+      default: "NORMAL",
     },
-    post_status:{
-        type: Number,
-        default: 0,
+    post_status: {
+      type: String,
+      enum: ["PUBLIC", "PRIVATE", "FRIEND"],
+      default: "PUBLIC",
+    },
+    post_num_comment: {
+      type: Number,
+      default: 0
+    },
+    post_num_like: {
+      type: Number,
+      default: 0
+    },
+    post_num_share: {
+      type: Number,
+      default: 0
     },
     post_type: {
-        type: String,
-        ref: 'Post'
-    }
+      type: Schema.Types.ObjectId,
+      ref: DOCUMENT_NAME,
+    },
   },
   {
     timestamps: true,

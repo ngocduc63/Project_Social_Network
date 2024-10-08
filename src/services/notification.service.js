@@ -17,6 +17,14 @@ class NotificationService {
       noti_content = "vua tao bai viet";
     } else if (type === NOTIFICATION_TYPES.LIKE_POST) {
       noti_content = "vua like bai viet";
+    } else if (type === NOTIFICATION_TYPES.COMMENT_POST){
+      noti_content = "vua comment bai viet";
+    } else if (type === NOTIFICATION_TYPES.SHARE_POST){
+      noti_content = "vua share bai viet";
+    } else if (type === NOTIFICATION_TYPES.ADD_FRIEND){
+      noti_content = "vua gui loi moi ket ban";
+    } else if (type === NOTIFICATION_TYPES.ACCEPT_FRIEND){
+      noti_content = "vua chap nhan loi moi ket ban";
     }
 
     const newNoti = await NotiModel.create({

@@ -1,7 +1,9 @@
 "user strict";
 
 const post = require("../models/post.model");
+const { convertToObjectIdMongodb } = require("../utils");
 const { NOTIFICATION_TYPES } = require("../utils/const.notification");
+const { POST_STATUS_TYPES, POST_IMAGE_CATEFORY } = require("../utils/const.post");
 const NotificationService = require("./notification.service");
 
 class PostService {
@@ -21,6 +23,17 @@ class PostService {
     return true;
   }
 
+  static async updateNumComment(num, postId) {
+    await post.updateOne(
+      {
+        _id: convertToObjectIdMongodb(postId),
+      },
+      {
+        $inc: { post_num_comment: num },
+      }
+    );
+  }
+
 }
 
 class Post {
@@ -28,8 +41,8 @@ class Post {
     post_title,
     created_by_user,
     post_image,
-    image_category,
-    post_status,
+    image_category = POST_IMAGE_CATEFORY.NORMAL_IAMGE,
+    post_status = POST_STATUS_TYPES.PUBLIC_POST,
     post_type,
   }) {
     this.post_title = post_title;
@@ -37,7 +50,7 @@ class Post {
     this.post_image = post_image;
     this.image_category = image_category;
     this.post_status = post_status;
-    this.post_type = post_type;
+    this.post_type = post_type ? post_type : null;
   }
 
   async createPost() {

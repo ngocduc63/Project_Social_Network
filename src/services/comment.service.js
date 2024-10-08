@@ -7,12 +7,9 @@ const UserService = require("./user.service");
 const PostService = require("./post.service");
 
 class CommemtService {
-  static async createComment(
-    { postId, content, parentCommentId },
-    keyStore
-  ) {
+  static async createComment({ postId, content, parentCommentId }, keyStore) {
     const userId = keyStore.user.toString();
-    console.log("user", userId);
+
     const comment = new Comment({
       comment_postId: postId,
       comment_userId: userId,
@@ -66,6 +63,10 @@ class CommemtService {
     comment.comment_right = rightValue + 1;
 
     await comment.save();
+
+    // icrease num comment in post:
+    PostService.updateNumComment(1, postId)
+
     return comment;
   }
 
@@ -168,43 +169,53 @@ class CommemtService {
     return comments;
   }
 
-  static async deleteComment({postId, commentId}) {
+  static async deleteComment({ postId, commentId }) {
     const post = await PostService.findPostById(postId);
     if (!post) throw new NotFoundError("Not found post");
 
     const comment = await Comment.findById(commentId);
     if (!comment) throw new NotFoundError("Not found comment");
 
-    const leftValue = comment.comment_left
-    const rightValue = comment.comment_right
-    const widtth = rightValue - leftValue + 1
-
+    const leftValue = comment.comment_left;
+    const rightValue = comment.comment_right;
+    const width = rightValue - leftValue + 1;
+    const num_comment_deleted = +(width / 2);
+    console.log('num', num_comment_deleted)
     // delete all comment child
     await Comment.deleteMany({
       comment_postId: convertToObjectIdMongodb(postId),
-      comment_left: {$gte: leftValue, $lte: rightValue}
-    })
+      comment_left: { $gte: leftValue, $lte: rightValue },
+    });
 
     // update left and right value
-    await Comment.updateMany({
-      comment_postId: convertToObjectIdMongodb(postId),
-      comment_right: {$gt: rightValue}
-    },{
-      $inc: {comment_right: -widtth}
-    })
+    await Comment.updateMany(
+      {
+        comment_postId: convertToObjectIdMongodb(postId),
+        comment_right: { $gt: rightValue },
+      },
+      {
+        $inc: { comment_right: -width },
+      }
+    );
 
-    await Comment.updateMany({
-      comment_postId: convertToObjectIdMongodb(postId),
-      comment_left: {$gt: rightValue}
-    },{
-      $inc: {comment_left: -widtth}
-    })
+    await Comment.updateMany(
+      {
+        comment_postId: convertToObjectIdMongodb(postId),
+        comment_left: { $gt: rightValue },
+      },
+      {
+        $inc: { comment_left: -width },
+      }
+    );
 
-    return true
+    // update post
+    PostService.updateNumComment(-num_comment_deleted, postId)
+
+    return true;
   }
 
-  static async updateComment({commentId, content}){
-    return {'mess': 'success'}
+  static async updateComment({ commentId, content }) {
+    return { mess: "success" };
   }
 }
 
