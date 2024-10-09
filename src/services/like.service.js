@@ -52,6 +52,32 @@ class LikeService {
 
     return true;
   }
+
+  static async getDataListLike(likes){
+    const rs = [];
+
+    for (const like of likes) {
+      const userInfo  = await UserService.getUserInfo(like.like_userId)
+
+      rs.push({
+        id: like._id.toString(),
+        category: like.like_category,
+        createdAt: like.createdAt,
+        userInfo: userInfo
+      })
+    }
+
+    return rs;
+  }
+
+  static async getListUserLikedSerVice({postId, limit = 50, offset = 0}) {
+    const postInfo = await PostService.findPostById(postId);
+    if (!postInfo) throw new NotFoundError("Post not found");
+
+    const dataLikes = await Like.find({like_postId: postId})
+
+    return this.getDataListLike(dataLikes)
+  }
 }
 
 module.exports = LikeService;

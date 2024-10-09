@@ -83,6 +83,7 @@ class CommemtService {
         comment_content: 1,
         comment_parentId: 1,
         comment_userId: 1,
+        createdAt: 1,
       })
       .sort({
         comment_left: 1,
@@ -102,6 +103,7 @@ class CommemtService {
         comment_content: 1,
         comment_parentId: 1,
         comment_userId: 1,
+        createdAt: 1,
       })
       .sort({
         comment_left: 1,
@@ -131,11 +133,11 @@ class CommemtService {
       );
 
       const userInfo = await UserService.getUserInfo(comment.comment_userId);
-
       rs.push({
         id: comment._id.toString(),
         content: comment.comment_content,
         parentId: comment.comment_parentId,
+        createdAt: comment.createdAt,
         countChildComment,
         userInfo,
       });
