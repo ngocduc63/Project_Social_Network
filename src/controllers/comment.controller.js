@@ -15,11 +15,11 @@ class CommentConstroller {
   };
 
   deleteComment = async (req, res, next) => {
-    new SuccessResponse(await CommentService.deleteComment(req.body)).send(res);
+    new SuccessResponse(await CommentService.deleteComment(req.body, req.keyStore)).send(res);
   };
 
   updateComment = async (req, res, next) => {
-    new SuccessResponse(await CommentService.updateComment(req.body)).send(res);
+    new SuccessResponse(await CommentService.updateComment(req.body, req.keyStore)).send(res);
   }
 }
 

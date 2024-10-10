@@ -25,21 +25,28 @@ class UserService {
       })
   };
 
+  static async getUserIdByKeyStore(keyStore) {
+    return await keyStore.user.toString();
+  }
+
   static updateAvatarService = async (file, keyStore) => {
     if (!file) throw new BadRequestError("file not found");
+    const userId = this.getUserIdByKeyStore(keyStore);
 
-    const user = await this.findById(keyStore.user);
+    const user = await this.findById(userId);
     if (!user) throw new BadRequestError("user not found");
 
     const rs = await userModel.updateOne(
-      { _id: keyStore.user },
+      { _id: userId},
       { avatar: file.filename }
     );
 
     // check update success
     if (!rs.acknowledged) throw new BadRequestError("update avatar error");
 
-    const userResult = await this.findById(keyStore.user);
+    const userResult = await this.findById(userId);
+
+    // create post avatar
 
     return {
       user: getInfoData({

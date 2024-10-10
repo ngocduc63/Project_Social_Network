@@ -6,6 +6,8 @@ const { NotFoundError, BadRequestError } = require("../core/error.response");
 const UserService = require("./user.service");
 const PostService = require("./post.service");
 const { LIKE_CATEGORY } = require("../utils/const.post");
+const NotificationService = require("./notification.service");
+const { NOTIFICATION_TYPES } = require("../utils/const.notification");
 
 class LikeService {
   static checkuserLiked(userId, postId) {
@@ -18,7 +20,7 @@ class LikeService {
   }
 
   static async createLike({ postId, likeCategory }, keyStore) {
-    const userId = keyStore.user.toString();
+    const userId = await UserService.getUserIdByKeyStore(keyStore);
     const category = likeCategory ? likeCategory : LIKE_CATEGORY.LIKE;
 
     const userInfo = await UserService.getUserInfo(userId);
@@ -38,15 +40,19 @@ class LikeService {
 
     PostService.updateNumLike(1, postId);
 
+    // notifi
+    NotificationService.pushNotiToSystem(NOTIFICATION_TYPES.LIKE_POST, userId, postInfo.created_by_user)
+
     return true;
   }
 
-  static async deleteLike({ likeId, postId }) {
+  static async deleteLike({ likeId, postId }, keyStore) {
+    const userId = await UserService.getUserIdByKeyStore(keyStore);
 
     const postInfo = await PostService.findPostById(postId);
     if (!postInfo) throw new NotFoundError("Post not found");
 
-    await Like.findOneAndDelete({ _id: likeId });
+    await Like.findOneAndDelete({ _id: likeId, like_userId: userId });
 
     PostService.updateNumLike(-1, postId);
 

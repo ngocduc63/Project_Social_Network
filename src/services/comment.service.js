@@ -5,10 +5,14 @@ const { convertToObjectIdMongodb } = require("../utils");
 const { NotFoundError } = require("../core/error.response");
 const UserService = require("./user.service");
 const PostService = require("./post.service");
+const NotificationService = require("./notification.service");
 
 class CommemtService {
   static async createComment({ postId, content, parentCommentId }, keyStore) {
-    const userId = keyStore.user.toString();
+    const postInfo = await PostService.findPostById(postId)
+    if (!postInfo) throw new NotFoundError("Not found post");
+
+    const userId = await UserService.getUserIdByKeyStore(keyStore);
 
     const comment = new Comment({
       comment_postId: postId,
@@ -66,6 +70,9 @@ class CommemtService {
 
     // icrease num comment in post:
     PostService.updateNumComment(1, postId)
+
+    // notifi
+    NotificationService.pushNotiToSystem(userId, postInfo.created_by_user)
 
     return comment;
   }
@@ -171,11 +178,12 @@ class CommemtService {
     return comments;
   }
 
-  static async deleteComment({ postId, commentId }) {
+  static async deleteComment({ postId, commentId }, keyStore) {
+    const userId = await UserService.getUserIdByKeyStore(keyStore);
     const post = await PostService.findPostById(postId);
     if (!post) throw new NotFoundError("Not found post");
 
-    const comment = await Comment.findById(commentId);
+    const comment = await Comment.findOne({_id: commentId, comment_userId: userId});
     if (!comment) throw new NotFoundError("Not found comment");
 
     const leftValue = comment.comment_left;
@@ -216,8 +224,12 @@ class CommemtService {
     return true;
   }
 
-  static async updateComment({ commentId, content }) {
-    return { mess: "success" };
+  static async updateComment({ commentId, content }, keyStore) {
+    const userId = await UserService.getUserIdByKeyStore(keyStore);
+
+    await Comment.findByIdAndUpdate({_id: commentId, comment_userId: userId}, {$set: {comment_content: content}})
+
+    return true;
   }
 }
 

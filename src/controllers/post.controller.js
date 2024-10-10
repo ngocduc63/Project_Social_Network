@@ -8,6 +8,14 @@ class PostController {
     const metadata = await PostService.createPost(req.body, req.keyStore);
     new SuccessResponse(metadata, "Create post success").send(res);
   };
+
+  updatePost = async(req, res, next) => { 
+    new SuccessResponse(await PostService.updatePost(req.body, req.keyStore), "Update post success").send(res);
+  }
+
+  deletePost = async(req, res, next) => {
+    new SuccessResponse(await PostService.deletePost(req.params, req.keyStore), "Delete post success").send(res);
+  }
 }
 
 module.exports = new PostController();

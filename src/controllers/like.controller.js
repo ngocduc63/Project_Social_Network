@@ -15,7 +15,7 @@ class CommentConstroller {
   };
 
   deleteLike = async (req, res, next) => {
-    const metadata = await LikeService.deleteLike(req.body);
+    const metadata = await LikeService.deleteLike(req.body, req.keyStore);
     new SuccessResponse(metadata, "Delete like success!").send(res);
   };
 }
