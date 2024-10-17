@@ -5,6 +5,12 @@ const FriendService = require("../services/friend.service");
 const LikeService = require("../services/like.service");
 
 class FriendConstroller {
+
+  getListFriend = async(req, res, nex) => {
+    const metadata = await FriendService.getListFriend(req.body, req.keyStore)
+    new SuccessResponse(metadata).send(res);
+  }
+
   addFriend = async (req, res, next) => { 
     const metadata = await FriendService.createFriend(req.body, req.keyStore)
     new SuccessResponse(metadata, "Add friend success").send(res);

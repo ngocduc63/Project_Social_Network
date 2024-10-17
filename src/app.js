@@ -6,7 +6,6 @@ const morgan = require('morgan');
 const { default: helmet } = require('helmet')
 const app = express()
 
-// console.log(`Process::`, process.env.key)
 //init middleware
 app.use(morgan("dev"))
 app.use(helmet())
@@ -25,22 +24,7 @@ require('./dbs/init.mongodb')
 // checkOverload()
 
 //init routes
-
-// app.get('/hello', ( req, res, next) => {
-//     const  strCompress ='hello world'
-//     return res.status(200).json({
-//          message :'Welcome Fantipjs',   
-//         //  metadata : strCompress.repeat(100000)
-//     })
-// })
 app.use('/', require('./routers'))
-// app.get('/hello/tien', ( req, res, next) => {
-//   const  strCompress ='hello world'
-//   return res.status(200).json({
-//        message :'ABC',   
-//       //  metadata : strCompress.repeat(100000)
-//   })
-// })
 
 //handling errors
 app.use((req, res, next) => {

@@ -15,6 +15,7 @@ router.use(permission('0000'))
 // check access token
 router.use(authentication)
 
+router.get('/list-friend', asyncHandler(friendController.getListFriend))
 router.post('/add-friend', asyncHandler(friendController.addFriend))
 router.put('/accept-friend', asyncHandler(friendController.acceptFriend))
 router.put('/unfriend', asyncHandler(friendController.unfriend))

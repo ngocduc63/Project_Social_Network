@@ -20,8 +20,8 @@ router.use(permission('0000'))
 // check access token
 router.use(authentication)
 
-router.get('/get-comments-by-parent-id', asyncHandler(commentController.getCommentsByParentId))
-router.get('/get-likes', asyncHandler(likeController.getListLike))
+router.get('/list-comments-by-parent-id', asyncHandler(commentController.getCommentsByParentId))
+router.get('/list-likes', asyncHandler(likeController.getListLike))
 
 router.post('/create-post', asyncHandler(postController.createPost))
 router.post('/create-comment', asyncHandler(commentController.createComment))

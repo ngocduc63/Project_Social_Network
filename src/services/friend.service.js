@@ -6,12 +6,48 @@ const { BadRequestError } = require("../core/error.response");
 const { FRIEND_STATUS } = require("../utils/const.user");
 
 class FriendService {
-  static async getListFriend(keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+  static async getDataFriends(friends, userId) {
+    const metadata = [];
 
-    const rs = await Friend.find({
-      $or: [{ created_by_user: userId }, { friend_userId: userId }],
-    });
+    for (const friend of friends) {
+      let friendInfo = {};
+      if (userId === friend.created_by_user.toString())
+        friendInfo = await UserService.getUserInfo(friend.friend_userId);
+      else friendInfo = await UserService.getUserInfo(friend.created_by_user);
+
+      friendInfo.createdAt = friend.createdAt;
+
+      metadata.push(friendInfo);
+    }
+
+    return metadata;
+  }
+
+  static async getListFriend({ friendId, limit = 50, offset = 0 }, keyStore) {
+    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const friend = await UserService.getUserInfo(friendId);
+
+    if (!friend) throw new BadRequestError("User not found");
+
+    if (friendId === userId) {
+      const friends = await Friend.find({
+        $or: [{ created_by_user: userId }, { friend_userId: userId }],
+        friend_status: FRIEND_STATUS.FRIEND,
+      });
+
+      return await this.getDataFriends(friends, userId);
+    } else {
+      const checkExistFriend = await this.checkFriendExits(userId, friendId);
+      if (!checkExistFriend?.friend_status === FRIEND_STATUS.FRIEND)
+        throw new BadRequestError("Friend not found");
+
+      const friends = await Friend.find({
+        $or: [{ created_by_user: friendId }, { friend_userId: friendId }],
+        friend_status: FRIEND_STATUS.FRIEND,
+      });
+
+      return await this.getDataFriends(friends, userId);
+    }
   }
 
   static async checkFriendExits(userId, friendId) {
@@ -32,12 +68,18 @@ class FriendService {
     if (!friend) throw new BadRequestError("Not found friend");
 
     const checkExistFriend = await this.checkFriendExits(userId, friendId);
-
-    if (checkExistFriend?.friend_status !== FRIEND_STATUS.UNFRIEND) {
+    console.log("first");
+    if (
+      checkExistFriend &&
+      checkExistFriend.friend_status !== FRIEND_STATUS.UNFRIEND
+    ) {
       throw new BadRequestError("Friend already exists");
     }
 
-    if (checkExistFriend?.friend_status == FRIEND_STATUS.UNFRIEND) {
+    if (
+      checkExistFriend &&
+      checkExistFriend.friend_status == FRIEND_STATUS.UNFRIEND
+    ) {
       let rs;
       if ((checkExistFriend.created_by_user = userId)) {
         rs = await Friend.findOneAndUpdate(
