@@ -3,4 +3,10 @@ const ROLE_USER = {
   EDITOR: "EDITOR",
   ADMIN: "ADMIN",
 };
-module.exports = { ROLE_USER };
+
+const FRIEND_STATUS = {
+  FOLLOW: "FOLLOW",
+  FRIEND: "FRIEND",
+  UNFRIEND: "UNFRIEND",
+}
+module.exports = { ROLE_USER, FRIEND_STATUS };

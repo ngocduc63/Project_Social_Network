@@ -3,7 +3,7 @@
 const { SuccessResponse } = require("../core/success.response");
 const LikeService = require("../services/like.service");
 
-class CommentConstroller {
+class LikeConstroller {
   getListLike = async (req, res, next) => {
     const metadata = await LikeService.getListUserLikedSerVice(req.body);
     new SuccessResponse(metadata).send(res);
@@ -20,4 +20,4 @@ class CommentConstroller {
   };
 }
 
-module.exports = new CommentConstroller();
+module.exports = new LikeConstroller();

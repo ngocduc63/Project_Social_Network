@@ -27,8 +27,8 @@ router.post('/create-post', asyncHandler(postController.createPost))
 router.post('/create-comment', asyncHandler(commentController.createComment))
 router.post('/create-like', asyncHandler(likeController.createLike))
 
-router.post('/update-post', asyncHandler(postController.updatePost))
-router.post('/update-comment', asyncHandler(commentController.updateComment))
+router.put('/update-post', asyncHandler(postController.updatePost))
+router.put('/update-comment', asyncHandler(commentController.updateComment))
 
 router.delete('/delete-post/:postId', asyncHandler(postController.deletePost))
 router.delete('/delete-comment', asyncHandler(commentController.deleteComment))
