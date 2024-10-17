@@ -5,7 +5,6 @@ const userModel = require("../models/user.model");
 const path = require("path");
 const fs = require("fs");
 const { getInfoData, convertToObjectIdMongodb } = require("../utils");
-const { findById } = require("../models/comment.model");
 
 class UserService {
   static findByEmail = async ({

@@ -1,5 +1,6 @@
 "user strict";
 
+const { BadRequestError } = require("../core/error.response");
 const post = require("../models/post.model");
 const { convertToObjectIdMongodb } = require("../utils");
 const { NOTIFICATION_TYPES } = require("../utils/const.notification");
@@ -18,21 +19,46 @@ class PostService {
     return await new Post(body).createPost();
   }
 
-  static async findPostById(idPost) {
-    return await post.findById(idPost);
+  static async getPostInfo(postId){
+    return await post.findById(convertToObjectIdMongodb(postId)).lean();
   }
 
-  static async deletePost({postId}, keyStore) {
+  static async sharePost({ postId, content = "", postStatus = POST_STATUS_TYPES.PUBLIC_POST }, keyStore) {
+    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const postInfo = await this.getPostInfo(postId);
+
+    if (!postInfo) throw new BadRequestError("Not found post")
+    
+    const rs = await post.create({
+      post_title: content,
+      created_by_user: userId,
+      post_type: postId,
+      post_status: postStatus
+    });
+    if (!rs) throw new BadRequestError("Can not shsare post");
+
+    this.updateNumShare(1, postId);
+
+    return true;
+  }
+
+  static async deletePost({ postId }, keyStore) {
     const userId = await UserService.getUserIdByKeyStore(keyStore);
 
-    await post.findOneAndDelete({_id: postId, created_by_user: userId})
+    const postInfo = await this.getPostInfo(postId);
+    if (!postInfo) throw new BadRequestError("Not found post");
 
+    const rs = await post.deleteOne({ _id: postId, created_by_user: userId });
+    if (!rs) throw new BadRequestError('Error deleting post')
+
+    if (postInfo.post_type) this.updateNumShare(-1, postInfo.post_type.toString())
+    
     return true;
   }
 
   static async updatePost({ postId, content, images, status }, keyStore) {
     const userId = await UserService.getUserIdByKeyStore(keyStore);
-    
+
     await post.findOneAndUpdate(
       { _id: postId, created_by_user: userId },
       { $set: { post_title: content, post_image: images, post_status: status } }
@@ -62,6 +88,17 @@ class PostService {
       }
     );
   }
+
+  static async updateNumShare(num, postId) {
+    await post.updateOne(
+      {
+        _id: convertToObjectIdMongodb(postId),
+      },
+      {
+        $inc: { post_num_share: num },
+      }
+    );
+  }
 }
 
 class Post {
@@ -84,7 +121,7 @@ class Post {
   async createPost() {
     const newPost = await post.create(this);
     if (newPost) {
-      NotificationService.pushNotiToSystem({
+      await NotificationService.pushNotiToSystem({
         type: NOTIFICATION_TYPES.CREATE_POST,
         senderId: this.created_by_user,
         receivedId: this.created_by_user,
