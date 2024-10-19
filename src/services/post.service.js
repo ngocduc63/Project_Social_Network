@@ -2,7 +2,7 @@
 
 const { BadRequestError } = require("../core/error.response");
 const post = require("../models/post.model");
-const { convertToObjectIdMongodb } = require("../utils");
+const { convertToObjectIdMongodb, encodePathFile } = require("../utils");
 const { NOTIFICATION_TYPES } = require("../utils/const.notification");
 const {
   POST_STATUS_TYPES,
@@ -13,11 +13,13 @@ const NotificationService = require("./notification.service");
 const CommonService = require("./common.service");
 
 class PostService {
-  static async createPost(body, keyStore) {
+  static async createPost(body, keyStore, files) {
+    const data = JSON.parse(body.data);
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
-    body.created_by_user = userId;
+    data.created_by_user = userId;
+    data.post_image = files.map(image => encodePathFile(image.path))
 
-    return await new Post(body).createPost();
+    return await new Post(data).createPost();
   }
 
   static getPostById = async (postId) => {
@@ -133,7 +135,8 @@ class Post {
         type: NOTIFICATION_TYPES.CREATE_POST,
         senderId: this.created_by_user,
         receivedId: this.created_by_user,
-      }).then((rs) => console.log(rs));
+      })
+      // .then((rs) => console.log(rs));
     }
 
     return newPost;

@@ -1,8 +1,8 @@
 "use strict";
 
 const multer = require("multer");
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 const uploadFileHandler = () => {
   // SET STORAGE
@@ -19,12 +19,32 @@ const uploadFileHandler = () => {
       cb(null, uploadPath);
     },
 
-    filename: function (req, file, cb) {
-      cb(null, file.fieldname + "-" + Date.now());
-    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname)); 
+    }
   });
 
-  const upload = multer({ storage: storage });
+  // Kiểm tra định dạng file
+  const fileFilter = (req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error("Invalid file type. Only JPEG, PNG and GIF are allowed!"),
+        false
+      );
+    }
+  };
+
+  const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+      fileSize: 1024 * 1024 * 5, // Giới hạn kích thước ảnh (5MB)
+    },
+  });
 
   return upload;
 };
