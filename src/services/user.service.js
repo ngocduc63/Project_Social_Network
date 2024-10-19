@@ -4,7 +4,7 @@ const { BadRequestError } = require("../core/error.response");
 const userModel = require("../models/user.model");
 const path = require("path");
 const fs = require("fs");
-const { getInfoData, convertToObjectIdMongodb } = require("../utils");
+const { getInfoData, convertToObjectIdMongodb, decodePathFile, encodePathFile } = require("../utils");
 const PostService = require("./post.service");
 const CommonService = require("./common.service");
 
@@ -26,7 +26,7 @@ class UserService {
 
     if (!user) throw new BadRequestError("user not found");
 
-    const imagePath = file.filename;
+    const imagePath = encodePathFile(file.path)
     const rs = await userModel.updateOne(
       { _id: userId },
       { $set: { avatar: imagePath } }
@@ -69,7 +69,7 @@ class UserService {
 
     if (!user) throw new BadRequestError("user not found");
 
-    const imagePath = file.filename
+    const imagePath = encodePathFile(file.path)
     const rs = await userModel.updateOne(
       { _id: userId },
       { $set: { cover: imagePath } }
@@ -106,7 +106,8 @@ class UserService {
   };
 
   static getImageUrl = async ({ filename }) => {
-    const filepath = path.join(__dirname, "../../uploads", filename);
+    const pathImage = decodePathFile(filename);
+    const filepath = path.join(__dirname, "../../uploads", pathImage);
 
     // Kiểm tra file có tồn tại không
     if (fs.existsSync(filepath)) return fs.createReadStream(filepath);
