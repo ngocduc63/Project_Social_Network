@@ -3,16 +3,16 @@
 const Comment = require("../models/comment.model");
 const { convertToObjectIdMongodb } = require("../utils");
 const { NotFoundError } = require("../core/error.response");
-const UserService = require("./user.service");
 const PostService = require("./post.service");
 const NotificationService = require("./notification.service");
+const CommonService = require("./common.service");
 
 class CommemtService {
   static async createComment({ postId, content, parentCommentId }, keyStore) {
-    const postInfo = await PostService.findPostById(postId)
+    const postInfo = await PostService.getPostById(postId)
     if (!postInfo) throw new NotFoundError("Not found post");
 
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
     const comment = new Comment({
       comment_postId: postId,
@@ -139,7 +139,7 @@ class CommemtService {
         comment
       );
 
-      const userInfo = await UserService.getUserInfo(comment.comment_userId);
+      const userInfo = await CommonService.getUserInfo(comment.comment_userId);
       rs.push({
         id: comment._id.toString(),
         content: comment.comment_content,
@@ -179,8 +179,8 @@ class CommemtService {
   }
 
   static async deleteComment({ postId, commentId }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
-    const post = await PostService.findPostById(postId);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+    const post = await PostService.getPostById(postId);
     if (!post) throw new NotFoundError("Not found post");
 
     const comment = await Comment.findOne({_id: commentId, comment_userId: userId});
@@ -225,7 +225,7 @@ class CommemtService {
   }
 
   static async updateComment({ commentId, content }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
     await Comment.findByIdAndUpdate({_id: commentId, comment_userId: userId}, {$set: {comment_content: content}})
 

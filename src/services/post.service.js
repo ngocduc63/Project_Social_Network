@@ -8,24 +8,32 @@ const {
   POST_STATUS_TYPES,
   POST_IMAGE_CATEGORY,
 } = require("../utils/const.post");
+const { GENDER_USER } = require("../utils/const.user");
 const NotificationService = require("./notification.service");
-const UserService = require("./user.service");
+const CommonService = require("./common.service");
 
 class PostService {
   static async createPost(body, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
     body.created_by_user = userId;
 
     return await new Post(body).createPost();
   }
 
-  static async getPostInfo(postId){
-    return await post.findById(convertToObjectIdMongodb(postId)).lean();
+  static getPostById = async (postId) => {
+    return await post.findById(convertToObjectIdMongodb(postId));
+  }
+
+  static async createPostImage(imagePathStr, userInfo, isUpdateAvatar = true){
+    const image_category = isUpdateAvatar ? POST_IMAGE_CATEGORY.AVATAR_IAMGE : POST_IMAGE_CATEGORY.COVER_IAMGE
+    const content = `đã cập nhật ${isUpdateAvatar ? 'ảnh đại diện' : 'ảnh bìa'} của ${userInfo.gender === GENDER_USER.MALE ? 'anh ấy' : 'cô ấy'}`
+
+    return await post.create({created_by_user: userInfo._id, image_category: image_category, post_image: imagePathStr, post_title: content})
   }
 
   static async sharePost({ postId, content = "", postStatus = POST_STATUS_TYPES.PUBLIC_POST }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
-    const postInfo = await this.getPostInfo(postId);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+    const postInfo = await this.getPostById(postId);
 
     if (!postInfo) throw new BadRequestError("Not found post")
     
@@ -43,9 +51,9 @@ class PostService {
   }
 
   static async deletePost({ postId }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
-    const postInfo = await this.getPostInfo(postId);
+    const postInfo = await this.getPostById(postId);
     if (!postInfo) throw new BadRequestError("Not found post");
 
     const rs = await post.deleteOne({ _id: postId, created_by_user: userId });
@@ -57,7 +65,7 @@ class PostService {
   }
 
   static async updatePost({ postId, content, images, status }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
     await post.findOneAndUpdate(
       { _id: postId, created_by_user: userId },

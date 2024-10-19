@@ -8,6 +8,7 @@ const PostService = require("./post.service");
 const { LIKE_CATEGORY } = require("../utils/const.post");
 const NotificationService = require("./notification.service");
 const { NOTIFICATION_TYPES } = require("../utils/const.notification");
+const CommonService = require("./common.service");
 
 class LikeService {
   static checkuserLiked(userId, postId) {
@@ -20,13 +21,13 @@ class LikeService {
   }
 
   static async createLike({ postId, likeCategory }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
     const category = likeCategory ? likeCategory : LIKE_CATEGORY.LIKE;
 
-    const userInfo = await UserService.getUserInfo(userId);
+    const userInfo = await CommonService.getUserInfo(userId);
     if (!userInfo) throw new NotFoundError("User not found");
 
-    const postInfo = await PostService.findPostById(postId);
+    const postInfo = await PostService.getPostById(postId);
     if (!postInfo) throw new NotFoundError("Post not found");
 
     const likeInfo = await this.checkuserLiked(userId, postId);
@@ -47,9 +48,9 @@ class LikeService {
   }
 
   static async deleteLike({ likeId, postId }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
-    const postInfo = await PostService.findPostById(postId);
+    const postInfo = await PostService.getPostById(postId);
     if (!postInfo) throw new NotFoundError("Post not found");
 
     await Like.findOneAndDelete({ _id: likeId, like_userId: userId });
@@ -63,7 +64,7 @@ class LikeService {
     const rs = [];
 
     for (const like of likes) {
-      const userInfo  = await UserService.getUserInfo(like.like_userId)
+      const userInfo  = await CommonService.getUserInfo(like.like_userId)
 
       rs.push({
         id: like._id.toString(),
@@ -77,7 +78,7 @@ class LikeService {
   }
 
   static async getListUserLikedSerVice({postId, limit = 50, offset = 0}) {
-    const postInfo = await PostService.findPostById(postId);
+    const postInfo = await PostService.getPostById(postId);
     if (!postInfo) throw new NotFoundError("Post not found");
 
     const dataLikes = await Like.find({like_postId: postId})

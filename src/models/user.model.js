@@ -28,8 +28,8 @@ var userSchema = new Schema(
     },
     gender: {
       type: String,
-      enum: ["Nam", "Nữ"],
-      default: "Nam",
+      enum: ["NAM", "NỮ"],
+      default: "NAM",
     },
     avatar: {
       type: String,

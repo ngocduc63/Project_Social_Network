@@ -20,5 +20,6 @@ router.use(permission('0000'))
 router.use(authentication)
 
 router.put('/update-avatar', upload.single('avatar'), asyncHandler(userController.updateAvatar))
+router.put('/update-cover', upload.single('cover'), asyncHandler(userController.updateCover))
 
 module.exports = router

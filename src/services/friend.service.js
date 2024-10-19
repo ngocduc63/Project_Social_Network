@@ -1,9 +1,9 @@
 "use strict";
 
 const Friend = require("../models/friend.model");
-const UserService = require("../services/user.service");
 const { BadRequestError } = require("../core/error.response");
 const { FRIEND_STATUS } = require("../utils/const.user");
+const CommonService = require("./common.service");
 
 class FriendService {
   static async getDataFriends(friends, userId) {
@@ -12,8 +12,8 @@ class FriendService {
     for (const friend of friends) {
       let friendInfo = {};
       if (userId === friend.created_by_user.toString())
-        friendInfo = await UserService.getUserInfo(friend.friend_userId);
-      else friendInfo = await UserService.getUserInfo(friend.created_by_user);
+        friendInfo = await CommonService.getUserInfo(friend.friend_userId);
+      else friendInfo = await CommonService.getUserInfo(friend.created_by_user);
 
       friendInfo.createdAt = friend.createdAt;
 
@@ -24,8 +24,8 @@ class FriendService {
   }
 
   static async getListFriend({ friendId, limit = 50, offset = 0 }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
-    const friend = await UserService.getUserInfo(friendId);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+    const friend = await CommonService.getUserInfo(friendId);
 
     if (!friend) throw new BadRequestError("User not found");
 
@@ -62,9 +62,9 @@ class FriendService {
   }
 
   static async createFriend({ friendId }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
-    const friend = await UserService.getUserInfo(friendId);
+    const friend = await CommonService.getUserInfo(friendId);
     if (!friend) throw new BadRequestError("Not found friend");
 
     const checkExistFriend = await this.checkFriendExits(userId, friendId);
@@ -118,9 +118,9 @@ class FriendService {
   }
 
   static async acceptFriend({ friendId }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
-    const friend = await UserService.getUserInfo(friendId);
+    const friend = await CommonService.getUserInfo(friendId);
     if (!friend) throw new BadRequestError("Not found friend");
 
     const rs = await Friend.findOneAndUpdate(
@@ -134,9 +134,9 @@ class FriendService {
   }
 
   static async declineFriend({ friendId }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
-    const friend = await UserService.getUserInfo(friendId);
+    const friend = await CommonService.getUserInfo(friendId);
     if (!friend) throw new BadRequestError("Not found friend");
 
     const rs = await Friend.findOneAndDelete({
@@ -152,9 +152,9 @@ class FriendService {
   }
 
   static async unfriend({ friendId }, keyStore) {
-    const userId = await UserService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
-    const friend = await UserService.getUserInfo(friendId);
+    const friend = await CommonService.getUserInfo(friendId);
     if (!friend) throw new BadRequestError("Not found friend");
 
     const rs = await Friend.findOneAndUpdate(

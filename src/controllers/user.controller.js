@@ -9,6 +9,11 @@ class UserController {
     new SuccessResponse(metadata).send(res);
   };
 
+  updateCover = async (req, res, next) => {
+    const metadata = await userService.updateCoverService(req.file, req.keyStore)
+    new SuccessResponse(metadata).send(res);
+  };
+  
   getImageUrl = async (req, res, next) => {
     const imageStream = await userService.getImageUrl(req.params);
 
