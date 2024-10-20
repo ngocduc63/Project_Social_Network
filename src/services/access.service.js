@@ -86,8 +86,8 @@ class AccessService {
     if (!foundUser) throw new BadRequestError("Shop not registered!");
 
     //2- match password
-    const match = bcrypt.compare(password, foundUser.password);
-    if (!match) throw new AuthFailureError("Authentication error!");
+    const match = await bcrypt.compare(password, foundUser.password);
+    if (!match) throw new BadRequestError("Authentication error!");
 
     // 3- create AT vs RT and save RT
     const privateKey = crypto.randomBytes(64).toString("hex");
