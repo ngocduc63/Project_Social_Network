@@ -113,7 +113,7 @@ class AccessService {
 
     return {
       user: getInfoData({
-        fileds: ["_id", "name", "email"],
+        fileds: ["_id", "name", "email", "avatar"],
         object: foundUser,
       }),
       tokens,
