@@ -8,12 +8,11 @@ const router =  express.Router()
 
 router.post('/signup', asyncHandler(accessController.signUp))
 router.post('/login', asyncHandler(accessController.login))
+router.put('/refresh-token', asyncHandler(accessController.handlerRefreshToken))
 
 // athentication middleware
 router.use(authentication)
-
 router.post('/logout', asyncHandler(accessController.logout))
-router.put('/refresh-token', asyncHandler(accessController.handlerRefreshToken))
 
 
 module.exports = router

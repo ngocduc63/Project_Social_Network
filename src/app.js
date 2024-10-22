@@ -5,6 +5,14 @@ const express   = require('express');
 const morgan = require('morgan');
 const { default: helmet } = require('helmet')
 const app = express()
+var cors = require('cors')
+
+app.use(cors());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 
 //init middleware
 app.use(morgan("dev"))
@@ -42,6 +50,5 @@ app.use((error, req, res, next) => {
   }) 
 
 })
-
 
 module.exports = app
