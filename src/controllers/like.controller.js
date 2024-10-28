@@ -14,6 +14,11 @@ class LikeConstroller {
     new SuccessResponse(metadata, "Created like success!").send(res);
   };
 
+  updateLike = async (req, res, next) => {
+    const metadata = await LikeService.updateLike(req.body, req.keyStore);
+    new SuccessResponse(metadata, "Update like success!").send(res);
+  };
+
   deleteLike = async (req, res, next) => {
     const metadata = await LikeService.deleteLike(req.body, req.keyStore);
     new SuccessResponse(metadata, "Delete like success!").send(res);

@@ -135,19 +135,24 @@ class PostService {
       },
       {
         $addFields: {
-          layout: { $arrayElemAt: [ ["classic", "column", "quote", "frame"], { $floor: { $multiply: [ { $rand: {} }, 4 ] } } ] }
-        }
+          layout: {
+            $arrayElemAt: [
+              ["classic", "column", "quote", "frame"],
+              { $floor: { $multiply: [{ $rand: {} }, 4] } },
+            ],
+          },
+        },
       },
       {
         $project: {
-          _id: 1, 
-          post_title: 1, 
+          _id: 1,
+          post_title: 1,
           created_by_user: 1,
           post_image: 1,
-          "user._id": 1, 
-          "user.name": 1, 
-          "user.avatar": 1, 
-          isFriend: 1, 
+          "user._id": 1,
+          "user.name": 1,
+          "user.avatar": 1,
+          isFriend: 1,
           createdAt: 1,
           updatedAt: 1,
           post_num_comment: 1,
@@ -279,39 +284,114 @@ class PostService {
   static async updateNumLike(num, postId, likeCategory, postInfo) {
     const postObjectId = convertToObjectIdMongodb(postId);
 
-    const existingReaction = postInfo?.reactions.find(reaction => reaction.type === likeCategory);
+    const existingReaction = postInfo?.reactions.find(
+      (reaction) => reaction.type === likeCategory
+    );
 
     if (existingReaction) {
+      if (existingReaction.count + num <= 0) {
         await post.updateOne(
-            {
-                _id: postObjectId,
-                'reactions.type': likeCategory
-            },
-            {
-                $inc: { 'reactions.$.count': num }
-            }
+          {
+            _id: postObjectId,
+          },
+          {
+            $pull: { reactions: { type: likeCategory } },
+          }
         );
+      } else {
+        await post.updateOne(
+          {
+            _id: postObjectId,
+            "reactions.type": likeCategory,
+          },
+          {
+            $inc: { "reactions.$.count": num },
+          }
+        );
+      }
     } else {
-        await post.updateOne(
-            {
-                _id: postObjectId
-            },
-            {
-                $push: { reactions: { type: likeCategory, count: 1 } }
-            }
-        );
+      await post.updateOne(
+        {
+          _id: postObjectId,
+        },
+        {
+          $push: { reactions: { type: likeCategory, count: 1 } },
+        }
+      );
     }
 
     await post.updateOne(
+      {
+        _id: postObjectId,
+      },
+      {
+        $inc: { post_num_like: num },
+      }
+    );
+  }
+
+  static async updateReactions(
+    postId,
+    likeCategory,
+    postInfo,
+    lastLikeCategory
+  ) {
+    if (likeCategory === lastLikeCategory) return;
+
+    const postObjectId = convertToObjectIdMongodb(postId);
+
+    // update last reaction
+    const lastReaction = postInfo?.reactions.find(
+      (reaction) => reaction.type === lastLikeCategory
+    );
+
+    if (lastReaction.count === 1) {
+      await post.updateOne(
         {
-            _id: postObjectId
+          _id: postObjectId,
         },
         {
-            $inc: { post_num_like: num }
+          $pull: { reactions: { type: lastLikeCategory } },
         }
-    );
-}
+      );
+    } else {
+      await post.updateOne(
+        {
+          _id: postObjectId,
+          "reactions.type": lastLikeCategory,
+        },
+        {
+          $inc: { "reactions.$.count": -1 },
+        }
+      );
+    }
 
+    // update new reaction
+    const existingReaction = postInfo?.reactions.find(
+      (reaction) => reaction.type === likeCategory
+    );
+
+    if (existingReaction) {
+        await post.updateOne(
+          {
+            _id: postObjectId,
+            "reactions.type": likeCategory,
+          },
+          {
+            $inc: { "reactions.$.count": 1 },
+          }
+        );
+    } else {
+      await post.updateOne(
+        {
+          _id: postObjectId,
+        },
+        {
+          $push: { reactions: { type: likeCategory, count: 1 } },
+        }
+      );
+    }
+  }
 
   static async updateNumShare(num, postId) {
     await post.updateOne(

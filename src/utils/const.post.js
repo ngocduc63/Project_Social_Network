@@ -18,6 +18,7 @@ const LIKE_CATEGORY = {
     HAHA: "HAHA",
     SAD: "SAD",
     ANGRY: "ANGRY",
+    LOVELOVE: "LOVELOVE",
     GET_ALL: "ALL",
   };
   

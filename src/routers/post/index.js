@@ -28,6 +28,7 @@ router.post('/create-comment', asyncHandler(commentController.createComment))
 router.post('/create-like', asyncHandler(likeController.createLike))
 router.post('/share-post', asyncHandler(postController.sharePost))
 
+router.put('/update-like', asyncHandler(likeController.updateLike))
 router.put('/update-post', asyncHandler(postController.updatePost))
 router.put('/update-comment', asyncHandler(commentController.updateComment))
 

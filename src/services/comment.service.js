@@ -69,10 +69,10 @@ class CommemtService {
     await comment.save();
 
     // icrease num comment in post:
-    PostService.updateNumComment(1, postId)
+    await PostService.updateNumComment(1, postId)
 
     // notifi
-    NotificationService.pushNotiToSystem(userId, postInfo.created_by_user)
+    // NotificationService.pushNotiToSystem(userId, postInfo.created_by_user)
 
     return comment;
   }
@@ -90,6 +90,7 @@ class CommemtService {
         comment_content: 1,
         comment_parentId: 1,
         comment_userId: 1,
+        comment_postId: 1,
         createdAt: 1,
       })
       .sort({
@@ -110,6 +111,7 @@ class CommemtService {
         comment_content: 1,
         comment_parentId: 1,
         comment_userId: 1,
+        comment_postId: 1,
         createdAt: 1,
       })
       .sort({
@@ -142,11 +144,12 @@ class CommemtService {
       const userInfo = await CommonService.getUserInfo(comment.comment_userId);
       rs.push({
         id: comment._id.toString(),
+        postid: comment.comment_postId,
         content: comment.comment_content,
         parentId: comment.comment_parentId,
         createdAt: comment.createdAt,
         countChildComment,
-        userInfo,
+        user: userInfo,
       });
     }
 
@@ -219,7 +222,7 @@ class CommemtService {
     );
 
     // update post
-    PostService.updateNumComment(-num_comment_deleted, postId)
+    await PostService.updateNumComment(-num_comment_deleted, postId)
 
     return true;
   }

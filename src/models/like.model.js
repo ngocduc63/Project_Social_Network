@@ -11,7 +11,7 @@ var likeSchema = new Schema(
     like_userId: { type: Schema.Types.ObjectId, ref: "User" },
     like_category: {
         type: String,
-        enum: ["LIKE", "LOVE", "HAHA", "SAD", "ANGRY"],
+        enum: ["LIKE", "LOVE", "HAHA", "SAD", "ANGRY", "LOVELOVE"],
         default: "LIKE",
       },
   },
