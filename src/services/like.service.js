@@ -30,7 +30,7 @@ class LikeService {
     if (!postInfo) throw new NotFoundError("Post not found");
 
     const likeInfo = await this.checkUserLiked(userId, postId);
-    if (likeInfo) throw new BadRequestError("User liked");
+    if (likeInfo) throw new NotFoundError("User liked");
 
     await Like.create({
       like_postId: postId,
@@ -38,23 +38,26 @@ class LikeService {
       like_category: category,
     });
 
-    PostService.updateNumLike(1, postId);
+    PostService.updateNumLike(1, postId, likeCategory, postInfo);
 
     // notifi
-    NotificationService.pushNotiToSystem(NOTIFICATION_TYPES.LIKE_POST, userId, postInfo.created_by_user)
+    // NotificationService.pushNotiToSystem(NOTIFICATION_TYPES.LIKE_POST, userId, postInfo.created_by_user)
 
     return true;
   }
 
-  static async deleteLike({ likeId, postId }, keyStore) {
+  static async deleteLike({ postId }, keyStore) {
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
     const postInfo = await PostService.getPostById(postId);
     if (!postInfo) throw new NotFoundError("Post not found");
 
-    await Like.findOneAndDelete({ _id: likeId, like_userId: userId });
+    const likeInfo = await Like.findOne({ like_postId: postId, like_userId: userId }).lean();
+    if (!likeInfo) throw new NotFoundError("Like not found");
 
-    PostService.updateNumLike(-1, postId);
+    await Like.deleteOne({ like_postId: postId, like_userId: userId });
+
+    PostService.updateNumLike(-1, postId, likeInfo.like_category, postInfo);
 
     return true;
   }

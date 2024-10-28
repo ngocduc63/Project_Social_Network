@@ -77,7 +77,37 @@ class PostService {
           from: "Users", // Tên collection chứa thông tin người dùng
           localField: "created_by_user", // Trường trong bài viết
           foreignField: "_id", // Trường trong collection Users
-          as: "userInfo", // Tên mảng lưu thông tin người dùng
+          as: "user", // Tên mảng lưu thông tin người dùng
+        },
+      },
+      {
+        $addFields: {
+          user: { $arrayElemAt: ["$user", 0] }, // Lấy phần tử đầu tiên của mảng user
+        },
+      },
+      {
+        $lookup: {
+          from: "Likes", // Tên collection lưu thông tin likes
+          let: { postId: "$_id" }, // Đặt biến postId từ _id của bài post
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$like_postId", "$$postId"] }, // Kiểm tra like của bài post này
+                    { $eq: ["$like_userId", userIdMongo] }, // Kiểm tra like bởi người dùng hiện tại
+                  ],
+                },
+              },
+            },
+          ],
+          as: "userLike", // Tên mảng lưu thông tin like của người dùng
+        },
+      },
+      {
+        $addFields: {
+          hasLiked: { $gt: [{ $size: "$userLike" }, 0] },
+          likeCategory: { $arrayElemAt: ["$userLike.like_category", 0] },
         },
       },
       {
@@ -104,16 +134,29 @@ class PostService {
         },
       },
       {
+        $addFields: {
+          layout: { $arrayElemAt: [ ["classic", "column", "quote", "frame"], { $floor: { $multiply: [ { $rand: {} }, 4 ] } } ] }
+        }
+      },
+      {
         $project: {
           _id: 1, 
           post_title: 1, 
-          created_by_user: 1, 
-          "userInfo._id": 1, 
-          "userInfo.name": 1, 
-          "userInfo.avatar": 1, 
+          created_by_user: 1,
+          post_image: 1,
+          "user._id": 1, 
+          "user.name": 1, 
+          "user.avatar": 1, 
           isFriend: 1, 
           createdAt: 1,
           updatedAt: 1,
+          post_num_comment: 1,
+          post_num_like: 1,
+          post_num_share: 1,
+          hasLiked: 1,
+          likeCategory: 1,
+          layout: 1,
+          reactions: 1,
         },
       },
     ];
@@ -233,16 +276,42 @@ class PostService {
     );
   }
 
-  static async updateNumLike(num, postId) {
+  static async updateNumLike(num, postId, likeCategory, postInfo) {
+    const postObjectId = convertToObjectIdMongodb(postId);
+
+    const existingReaction = postInfo?.reactions.find(reaction => reaction.type === likeCategory);
+
+    if (existingReaction) {
+        await post.updateOne(
+            {
+                _id: postObjectId,
+                'reactions.type': likeCategory
+            },
+            {
+                $inc: { 'reactions.$.count': num }
+            }
+        );
+    } else {
+        await post.updateOne(
+            {
+                _id: postObjectId
+            },
+            {
+                $push: { reactions: { type: likeCategory, count: 1 } }
+            }
+        );
+    }
+
     await post.updateOne(
-      {
-        _id: convertToObjectIdMongodb(postId),
-      },
-      {
-        $inc: { post_num_like: num },
-      }
+        {
+            _id: postObjectId
+        },
+        {
+            $inc: { post_num_like: num }
+        }
     );
-  }
+}
+
 
   static async updateNumShare(num, postId) {
     await post.updateOne(

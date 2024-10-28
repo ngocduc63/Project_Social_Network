@@ -22,6 +22,10 @@ var postSchema = new Schema(
       type: Array,
       default: [],
     },
+    reactions: {
+      type: Array,
+      default: [],
+    },
     image_category: {
       type: String,
       enum: ["NORMAL", "AVATAR", "COVER"],

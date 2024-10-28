@@ -1,7 +1,8 @@
 'use strict';
 const StatusCode = {
     FORBIDDEN : 403,
-    CONFLICT : 409
+    CONFLICT : 409,
+    NOT_FOUND: 406
 }
 
 const ReasonStatusCode = {
