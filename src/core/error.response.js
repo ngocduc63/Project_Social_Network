@@ -2,12 +2,14 @@
 const StatusCode = {
     FORBIDDEN : 403,
     CONFLICT : 409,
-    NOT_FOUND: 406
+    NOT_FOUND: 406,
+    JWT_EXPRIED : 407
 }
 
 const ReasonStatusCode = {
     FORBIDDEN : 'Bad request error',
-    CONFLICT : 'Conflict error'
+    CONFLICT : 'Conflict error',
+    JWT_EXPRIED : "Expired token"
 } 
 
 const {
@@ -24,6 +26,12 @@ class ErrorResponse extends Error {
 
 class ConflictError extends ErrorResponse {
     constructor(message = ReasonStatusCode.CONFLICT, statusCode = StatusCode.FORBIDDEN) {
+        super(message, statusCode)
+    }
+}
+
+class JwtExpriedError extends ErrorResponse {
+    constructor(message = ReasonStatusCode.JWT_EXPRIED, statusCode = StatusCode.JWT_EXPRIED) {
         super(message, statusCode)
     }
 }
@@ -53,4 +61,4 @@ class ForbiddenError extends ErrorResponse {
 }
 
 
-module.exports = { ConflictError, BadRequestError,AuthFailureError,NotFoundError, ForbiddenError}
+module.exports = { ConflictError, BadRequestError,AuthFailureError,NotFoundError, ForbiddenError, JwtExpriedError}

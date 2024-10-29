@@ -1,7 +1,7 @@
 'use strict';
 const JWT = require('jsonwebtoken') 
 const asyncHandler = require('../helpers/asyncHandler')
-const { AuthFailureError, NotFoundError} = require('../core/error.response')
+const { AuthFailureError, NotFoundError, JwtExpriedError} = require('../core/error.response')
 const { findByUserId } =require('../services/keyToken.service')
 
 const HEADER = {
@@ -57,7 +57,12 @@ const  authentication = asyncHandler(async(req, res, next)=>{
         return next()
         
     } catch (error) {
-        throw error
+        if (error instanceof JWT.TokenExpiredError){
+            throw new JwtExpriedError()
+        }
+        else {
+            throw error
+        }
     }
     // 4- check user in db
     // 5- check key store with this userId
