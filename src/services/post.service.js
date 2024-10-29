@@ -11,6 +11,10 @@ const {
 const { GENDER_USER, FRIEND_STATUS } = require("../utils/const.user");
 const NotificationService = require("./notification.service");
 const CommonService = require("./common.service");
+const {
+  allowedImageTypes,
+  allowedVideoTypes,
+} = require("../utils/const.common");
 
 class PostService {
   static async getPostForUser({ page = 1, limit = 20, offset = 0 }, keyStore) {
@@ -194,10 +198,17 @@ class PostService {
   }
 
   static async createPost(body, keyStore, files) {
+    console.log("first", files);
     const data = JSON.parse(body.data);
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
     data.created_by_user = userId;
-    data.post_image = files.map((image) => encodePathFile(image.path));
+    data.post_image = files
+      .filter((file) => allowedImageTypes.includes(file.mimetype)) 
+      .map((file) => encodePathFile(file.path));
+
+    data.post_video = files
+      .filter((file) => allowedVideoTypes.includes(file.mimetype)) 
+      .map((file) => encodePathFile(file.path));
 
     return await new Post(data).createPost();
   }
@@ -372,15 +383,15 @@ class PostService {
     );
 
     if (existingReaction) {
-        await post.updateOne(
-          {
-            _id: postObjectId,
-            "reactions.type": likeCategory,
-          },
-          {
-            $inc: { "reactions.$.count": 1 },
-          }
-        );
+      await post.updateOne(
+        {
+          _id: postObjectId,
+          "reactions.type": likeCategory,
+        },
+        {
+          $inc: { "reactions.$.count": 1 },
+        }
+      );
     } else {
       await post.updateOne(
         {
@@ -410,11 +421,13 @@ class Post {
     post_title,
     created_by_user,
     post_image,
+    post_video,
     image_category = POST_IMAGE_CATEGORY.NORMAL_IAMGE,
     post_status = POST_STATUS_TYPES.PUBLIC_POST,
     post_type,
   }) {
     this.post_title = post_title;
+    this.post_video = post_video;
     this.created_by_user = created_by_user;
     this.post_image = post_image;
     this.image_category = image_category;

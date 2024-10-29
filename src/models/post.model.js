@@ -22,6 +22,10 @@ var postSchema = new Schema(
       type: Array,
       default: [],
     },
+    post_video: {
+      type: Array,
+      default: [],
+    },
     reactions: {
       type: Array,
       default: [],

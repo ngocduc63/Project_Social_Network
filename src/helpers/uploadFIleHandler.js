@@ -3,6 +3,7 @@
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const { allowedImageTypes, allowedVideoTypes } = require("../utils/const.common");
 
 const uploadFileHandler = () => {
   // SET STORAGE
@@ -27,14 +28,14 @@ const uploadFileHandler = () => {
 
   // Kiểm tra định dạng file
   const fileFilter = (req, file, cb) => {
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
+    if (allowedImageTypes.includes(file.mimetype)) {
+        // Nếu là file ảnh
+        cb(null, { type: 'image', file: file });
+    } else if (allowedVideoTypes.includes(file.mimetype)) {
+        // Nếu là file video
+        cb(null, { type: 'video', file: file });
     } else {
-      cb(
-        new Error("Invalid file type. Only JPEG, PNG and GIF are allowed!"),
-        false
-      );
+        cb(new Error("Invalid file type. Only JPEG, PNG, GIF, and video files are allowed!"), false);
     }
   };
 
@@ -42,9 +43,16 @@ const uploadFileHandler = () => {
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-      fileSize: 1024 * 1024 * 5, // Giới hạn kích thước ảnh (5MB)
+        fileSize: (req, file) => {
+            if (file.mimetype.startsWith('image/')) {
+                return 1024 * 1024 * 5; // Giới hạn cho ảnh (5MB)
+            } else if (file.mimetype.startsWith('video/')) {
+                return 1024 * 1024 * 20; // Giới hạn cho video (20MB)
+            }
+            return 1024 * 1024 * 5; 
+        },
     },
-  });
+  })
 
   return upload;
 };
