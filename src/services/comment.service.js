@@ -9,7 +9,7 @@ const CommonService = require("./common.service");
 
 class CommemtService {
   static async createComment({ postId, content, parentCommentId }, keyStore) {
-    const postInfo = await PostService.getPostById(postId)
+    const postInfo = await PostService.getPostById(postId);
     if (!postInfo) throw new NotFoundError("Not found post");
 
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
@@ -69,7 +69,7 @@ class CommemtService {
     await comment.save();
 
     // icrease num comment in post:
-    await PostService.updateNumComment(1, postId)
+    await PostService.updateNumComment(1, postId);
 
     // notifi
     // NotificationService.pushNotiToSystem(userId, postInfo.created_by_user)
@@ -77,7 +77,20 @@ class CommemtService {
     return comment;
   }
 
-  static async findCommentByParentId(postId, parentCommentId, parent) {
+  static async findCommentByParentId(
+    postId,
+    parentCommentId,
+    parent,
+    page,
+    limit
+  ) {
+    const totalComments = await Comment.countDocuments({
+      comment_postId: convertToObjectIdMongodb(postId),
+      comment_parentId: convertToObjectIdMongodb(parentCommentId),
+      comment_left: { $gt: parent.comment_left },
+      comment_right: { $lte: parent.comment_right },
+    });
+
     const comments = await Comment.find({
       comment_postId: convertToObjectIdMongodb(postId),
       commnet_parentId: convertToObjectIdMongodb(parentCommentId),
@@ -94,13 +107,21 @@ class CommemtService {
         createdAt: 1,
       })
       .sort({
+        createdAt: -1,
         comment_left: 1,
-      });
+      })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-    return comments;
+    return {comments, totalComments};
   }
 
-  static async findCommentByPostId(postId) {
+  static async findCommentByPostId(postId, page, limit) {
+    const totalComments = await Comment.countDocuments({
+      comment_postId: convertToObjectIdMongodb(postId),
+      commnet_parentId: null,
+    });
+
     const comments = await Comment.find({
       comment_postId: convertToObjectIdMongodb(postId),
       commnet_parentId: null,
@@ -115,10 +136,13 @@ class CommemtService {
         createdAt: 1,
       })
       .sort({
-        comment_left: 1,
-      });
+        createdAt: -1,
+        comment_left: -1,
+      })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-    return comments;
+    return {comments, totalComments};
   }
 
   static async commentCountForParentId(postId, parentCommentId, parent) {
@@ -143,8 +167,8 @@ class CommemtService {
 
       const userInfo = await CommonService.getUserInfo(comment.comment_userId);
       rs.push({
-        id: comment._id.toString(),
-        postid: comment.comment_postId,
+        _id: comment._id.toString(),
+        postId: comment.comment_postId,
         content: comment.comment_content,
         parentId: comment.comment_parentId,
         createdAt: comment.createdAt,
@@ -159,26 +183,34 @@ class CommemtService {
   static async getCommentsByParentId({
     postId,
     parentCommentId = null,
-    limit = 50,
+    page = 1,
+    limit = 10,
     offset = 0,
   }) {
     if (parentCommentId) {
       const parent = await Comment.findById(parentCommentId);
       if (!parent) throw new NotFoundError("Not found comment for post");
 
-      const comments = this.getDataComments(
+      const { comments, totalComments } = await this.findCommentByParentId(
         postId,
-        await this.findCommentByParentId(postId, parentCommentId, parent)
+        parentCommentId,
+        parent,
+        page,
+        limit
       );
 
-      return comments;
-    }
+      const data = await this.getDataComments(postId, comments);
+      return { comments: data, page, totalPage: Math.ceil(totalComments / limit), totalComments };
+    } else {
+      const { comments, totalComments } = await this.findCommentByPostId(
+        postId,
+        page,
+        limit
+      );
 
-    const comments = this.getDataComments(
-      postId,
-      await this.findCommentByPostId(postId)
-    );
-    return comments;
+      const data = await this.getDataComments(postId, comments);
+      return { comments: data, page, totalPage: Math.ceil(totalComments / limit), totalComments };
+    }
   }
 
   static async deleteComment({ postId, commentId }, keyStore) {
@@ -186,14 +218,17 @@ class CommemtService {
     const post = await PostService.getPostById(postId);
     if (!post) throw new NotFoundError("Not found post");
 
-    const comment = await Comment.findOne({_id: commentId, comment_userId: userId});
+    const comment = await Comment.findOne({
+      _id: commentId,
+      comment_userId: userId,
+    });
     if (!comment) throw new NotFoundError("Not found comment");
 
     const leftValue = comment.comment_left;
     const rightValue = comment.comment_right;
     const width = rightValue - leftValue + 1;
     const num_comment_deleted = +(width / 2);
-    
+
     // delete all comment child
     await Comment.deleteMany({
       comment_postId: convertToObjectIdMongodb(postId),
@@ -222,7 +257,7 @@ class CommemtService {
     );
 
     // update post
-    await PostService.updateNumComment(-num_comment_deleted, postId)
+    await PostService.updateNumComment(-num_comment_deleted, postId);
 
     return true;
   }
@@ -230,7 +265,10 @@ class CommemtService {
   static async updateComment({ commentId, content }, keyStore) {
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
-    await Comment.findByIdAndUpdate({_id: commentId, comment_userId: userId}, {$set: {comment_content: content}})
+    await Comment.findByIdAndUpdate(
+      { _id: commentId, comment_userId: userId },
+      { $set: { comment_content: content } }
+    );
 
     return true;
   }
