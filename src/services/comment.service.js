@@ -6,6 +6,7 @@ const { NotFoundError } = require("../core/error.response");
 const PostService = require("./post.service");
 const NotificationService = require("./notification.service");
 const CommonService = require("./common.service");
+const { NOTIFICATION_TYPES } = require("../utils/const.notification");
 
 class CommemtService {
   static async createComment({ postId, content, parentCommentId }, keyStore) {
@@ -72,7 +73,13 @@ class CommemtService {
     await PostService.updateNumComment(1, postId);
 
     // notifi
-    // NotificationService.pushNotiToSystem(userId, postInfo.created_by_user)
+    const notiInfo = {
+      type: NOTIFICATION_TYPES.COMMENT_POST,
+      receivedId: postInfo.created_by_user.toString(),
+      senderId: userId,
+      options: {'postId': postId}
+    }
+    NotificationService.pushNotiToSystem(notiInfo);
 
     return comment;
   }

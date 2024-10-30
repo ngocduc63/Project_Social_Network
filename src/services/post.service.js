@@ -198,7 +198,6 @@ class PostService {
   }
 
   static async createPost(body, keyStore, files) {
-    console.log("first", files);
     const data = JSON.parse(body.data);
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
     data.created_by_user = userId;
@@ -251,6 +250,14 @@ class PostService {
     if (!rs) throw new BadRequestError("Can not shsare post");
 
     this.updateNumShare(1, postId);
+
+    const notiInfo = {
+      type: NOTIFICATION_TYPES.SHARE_POST,
+      receivedId: postInfo.created_by_user.toString(),
+      senderId: userId,
+      options: {'postId': postId}
+    }
+    NotificationService.pushNotiToSystem(notiInfo);
 
     return true;
   }
@@ -442,8 +449,7 @@ class Post {
         type: NOTIFICATION_TYPES.CREATE_POST,
         senderId: this.created_by_user,
         receivedId: this.created_by_user,
-      });
-      // .then((rs) => console.log(rs));
+      }).then((rs) => console.log(rs));
     }
 
     return newPost;
