@@ -11,6 +11,7 @@ const upload = uploadFileHandler()
 const router =  express.Router()
 
 router.get('/image/:filename', asyncHandler(userController.getImageUrl))
+router.get('/video/:filename', asyncHandler(userController.getVideoUrl))
 
 //check apikey
 router.use(apiKey)

@@ -105,7 +105,7 @@ class UserService {
     };
   };
 
-  static getImageUrl = async ({ filename }) => {
+  static getFileUrl = async ({ filename }) => {
     const pathImage = decodePathFile(filename);
     const filepath = path.join(__dirname, "../../uploads", pathImage);
 

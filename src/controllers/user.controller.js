@@ -15,11 +15,19 @@ class UserController {
   };
   
   getImageUrl = async (req, res, next) => {
-    const imageStream = await userService.getImageUrl(req.params);
+    const imageStream = await userService.getFileUrl(req.params);
 
     res.contentType("image/png");
 
     imageStream.pipe(res);
+  };
+
+  getVideoUrl = async (req, res, next) => {
+    const videoStream = await userService.getFileUrl(req.params);
+
+    res.contentType("video/mp4");
+
+    videoStream.pipe(res);
   };
 }
 
