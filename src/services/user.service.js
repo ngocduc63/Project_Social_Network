@@ -4,9 +4,16 @@ const { BadRequestError } = require("../core/error.response");
 const userModel = require("../models/user.model");
 const path = require("path");
 const fs = require("fs");
-const { getInfoData, convertToObjectIdMongodb, decodePathFile, encodePathFile } = require("../utils");
+const {
+  getInfoData,
+  convertToObjectIdMongodb,
+  decodePathFile,
+  encodePathFile,
+} = require("../utils");
 const PostService = require("./post.service");
 const CommonService = require("./common.service");
+const FriendService = require("./friend.service");
+const { FRIEND_STATUS } = require("../utils/const.user");
 
 class UserService {
   static findByEmail = async ({
@@ -18,6 +25,37 @@ class UserService {
 
   static findById = async (id) => await userModel.findById(id).lean();
 
+  static async getUserInfo({ userId }, keyStore) {
+    const userInfo = await userModel
+      .findById(convertToObjectIdMongodb(userId))
+      .lean();
+    const friendId = await CommonService.getUserIdByKeyStore(keyStore);
+
+    userInfo.numFriends = await FriendService.countFriends(
+      userInfo._id.toString(),
+      friendId
+    );
+    const checkFriend = await FriendService.checkFriendExits(
+      userInfo._id.toString(),
+      friendId
+    );
+    userInfo.isFriend = checkFriend.friend_status === FRIEND_STATUS.FRIEND;
+    
+    return getInfoData({
+      fileds: [
+        "_id",
+        "name",
+        "avatar",
+        "gender",
+        "cover",
+        "createdAt",
+        "numFriends",
+        "isFriend",
+      ],
+      object: userInfo,
+    });
+  }
+
   static updateAvatarService = async (file, keyStore) => {
     if (!file) throw new BadRequestError("file not found");
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
@@ -26,7 +64,7 @@ class UserService {
 
     if (!user) throw new BadRequestError("user not found");
 
-    const imagePath = encodePathFile(file.path)
+    const imagePath = encodePathFile(file.path);
     const rs = await userModel.updateOne(
       { _id: userId },
       { $set: { avatar: imagePath } }
@@ -69,7 +107,7 @@ class UserService {
 
     if (!user) throw new BadRequestError("user not found");
 
-    const imagePath = encodePathFile(file.path)
+    const imagePath = encodePathFile(file.path);
     const rs = await userModel.updateOne(
       { _id: userId },
       { $set: { cover: imagePath } }

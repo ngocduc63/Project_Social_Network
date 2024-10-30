@@ -20,6 +20,8 @@ router.use(permission('0000'))
 // check access token
 router.use(authentication)
 
+router.get('/get-user-info', asyncHandler(userController.getUserInfo))
+
 router.put('/update-avatar', upload.single('avatar'), asyncHandler(userController.updateAvatar))
 router.put('/update-cover', upload.single('cover'), asyncHandler(userController.updateCover))
 
