@@ -153,6 +153,7 @@ class PostService {
           post_title: 1,
           created_by_user: 1,
           post_image: 1,
+          post_video: 1,
           "user._id": 1,
           "user.name": 1,
           "user.avatar": 1,
