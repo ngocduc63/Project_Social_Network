@@ -21,4 +21,4 @@ const callApiEveryMinute = () => {
        });
 };
 
-setInterval(callApiEveryMinute, 100);
+setInterval(callApiEveryMinute, 60000);
