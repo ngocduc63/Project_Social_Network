@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
-const {
-  db: { host, name, port },
-} = require("../configs/congif.mongdb");
+// const {
+//   db: { host, name, port },
+// } = require("../configs/congif.mongdb");
 
-const connectString = `mongodb://${host}:${port}/${name}`;
+// const connectString = `mongodb://${host}:${port}/${name}`;
 const connectStringCloud = `mongodb+srv://admin:0918273645abc@api-facbook.svm7t.mongodb.net/?retryWrites=true&w=majority&appName=API-FACBOOK`;
 
 
