@@ -131,3 +131,4 @@ dist
 
 # ignore file uploads
 uploads/
+.vercel

@@ -14,6 +14,8 @@ app.use(
   })
 );
 
+app.get("/", (req, res) => res.send("Express on Vercel"));
+
 //init middleware
 app.use(morgan("dev"))
 app.use(helmet())
