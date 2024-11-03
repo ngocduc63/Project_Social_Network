@@ -5,6 +5,8 @@ const {
 } = require("../configs/congif.mongdb");
 
 const connectString = `mongodb://${host}:${port}/${name}`;
+const connectStringCloud = `mongodb+srv://admin:0918273645abc@api-facbook.svm7t.mongodb.net/?retryWrites=true&w=majority&appName=API-FACBOOK`;
+
 
 // const connectString = `mongodb://localhost:27017/webFacebook`
 const { countConnect } = require("../helpers/check.connect");
@@ -22,7 +24,7 @@ class Database {
 
     module.exports = mongoose;
     mongoose
-      .connect(connectString, {
+      .connect(connectStringCloud, {
         maxPoolSize: 50,
       })
       .then((_) => {
