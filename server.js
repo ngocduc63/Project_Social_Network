@@ -12,7 +12,7 @@ const  server = app.listen(PORT, '0.0.0.0' , ()=>{
 // })
 
 const callApiEveryMinute = () => {
-   axios.get(`https://0.0.0.0:${PORT}/api/user/image/avt_default_male`)
+   axios.get(`https://project-social-network.onrender.com/api/user/image/avt_default_male`)
        .then(() => {
            console.log("API called successfully");
        })
