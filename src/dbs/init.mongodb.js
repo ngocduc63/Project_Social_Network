@@ -31,7 +31,7 @@ class Database {
         console.log(`Connected Mongodb Success Pro`, countConnect());
       })
       .catch((err) => {
-        console.log("🚀 ~ Database ~ connect ~ err:", err)
+        console.log("Database ~ connect ~ err:", err)
         
         console.log(`Connected Mongodb Fail`)
       })
