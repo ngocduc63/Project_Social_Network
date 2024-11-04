@@ -9,6 +9,8 @@ const {
   convertToObjectIdMongodb,
   decodePathFile,
   encodePathFile,
+  getFileGGDriveById,
+  uploadFileToGGDrive,
 } = require("../utils");
 const PostService = require("./post.service");
 const CommonService = require("./common.service");
@@ -64,7 +66,7 @@ class UserService {
 
     if (!user) throw new BadRequestError("user not found");
 
-    const imagePath = encodePathFile(file.path);
+    const imagePath = await uploadFileToGGDrive(file);
     const rs = await userModel.updateOne(
       { _id: userId },
       { $set: { avatar: imagePath } }
@@ -107,7 +109,7 @@ class UserService {
 
     if (!user) throw new BadRequestError("user not found");
 
-    const imagePath = encodePathFile(file.path);
+    const imagePath = await uploadFileToGGDrive(file);
     const rs = await userModel.updateOne(
       { _id: userId },
       { $set: { cover: imagePath } }
@@ -150,6 +152,10 @@ class UserService {
     // Kiểm tra file có tồn tại không
     if (fs.existsSync(filepath)) return fs.createReadStream(filepath);
     else throw new BadRequestError("file not found");
+  };
+
+  static getFileClound = async ({ filename }) => {
+    return await getFileGGDriveById(filename);
   };
 
   static updateProfile = async (body) => {

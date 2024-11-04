@@ -7,25 +7,28 @@ const { allowedImageTypes, allowedVideoTypes } = require("../utils/const.common"
 
 const uploadFileHandler = () => {
   // SET STORAGE
-  const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      const userId = req.keyStore.user.toString();
-      const uploadPath = path.join("uploads", userId);
+  // set upload local
+  // const storage = multer.diskStorage({
+  //   destination: function (req, file, cb) {
+  //     const userId = req.keyStore.user.toString();
+  //     const uploadPath = path.join("uploads", userId);
 
-      // Kiểm tra nếu thư mục tồn tại, nếu không thì tạo mới
-      if (!fs.existsSync(uploadPath)) {
-        fs.mkdirSync(uploadPath, { recursive: true }); // Tạo thư mục nếu chưa có (recursive: true để tạo các thư mục cha nếu cần)
-      }
+  //     // Kiểm tra nếu thư mục tồn tại, nếu không thì tạo mới
+  //     if (!fs.existsSync(uploadPath)) {
+  //       fs.mkdirSync(uploadPath, { recursive: true }); // Tạo thư mục nếu chưa có (recursive: true để tạo các thư mục cha nếu cần)
+  //     }
 
-      cb(null, uploadPath);
-    },
+  //     cb(null, uploadPath);
+  //   },
 
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname)); 
-    }
-  });
+  //   filename: (req, file, cb) => {
+  //     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+  //     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname)); 
+  //   }
+  // });
 
+  const storage = multer.memoryStorage();
+  
   // Kiểm tra định dạng file
   const fileFilter = (req, file, cb) => {
     if (allowedImageTypes.includes(file.mimetype)) {

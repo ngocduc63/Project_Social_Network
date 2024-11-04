@@ -2,7 +2,7 @@
 
 const { BadRequestError } = require("../core/error.response");
 const post = require("../models/post.model");
-const { convertToObjectIdMongodb, encodePathFile } = require("../utils");
+const { convertToObjectIdMongodb, encodePathFile, uploadFileToGGDrive } = require("../utils");
 const { NOTIFICATION_TYPES } = require("../utils/const.notification");
 const {
   POST_STATUS_TYPES,
@@ -202,13 +202,18 @@ class PostService {
     const data = JSON.parse(body.data);
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
     data.created_by_user = userId;
-    data.post_image = files
-      .filter((file) => allowedImageTypes.includes(file.mimetype)) 
-      .map((file) => encodePathFile(file.path));
-
-    data.post_video = files
-      .filter((file) => allowedVideoTypes.includes(file.mimetype)) 
-      .map((file) => encodePathFile(file.path));
+    data.post_image = await Promise.all(
+      files
+        .filter((file) => allowedImageTypes.includes(file.mimetype))
+        .map(async (file) => await uploadFileToGGDrive(file))
+    );
+    
+    data.post_video = await Promise.all(
+      files
+        .filter((file) => allowedVideoTypes.includes(file.mimetype))
+        .map(async (file) => await uploadFileToGGDrive(file))
+    );
+    
 
     return await new Post(data).createPost();
   }
