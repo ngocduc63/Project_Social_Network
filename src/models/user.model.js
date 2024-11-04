@@ -33,11 +33,12 @@ var userSchema = new Schema(
     },
     avatar: {
       type: String,
-      default: "avt_default_male",
+      default: "1xxwIEW7iJQSwfO1O6pQFMfUXDlxkc9Q5",
+      // female: 1aQZq-HrDsmh8N8vOXS230EBPNC4A_AXU
     },
     cover: {
       type: String,
-      default: "cover_default",
+      default: "1H3Hjaf7a3QRinUtoYkt2NnuWuH6K1Bf7",
     },
     verfify: {
       type: Schema.Types.Boolean,
