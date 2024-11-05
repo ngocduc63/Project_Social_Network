@@ -137,15 +137,20 @@ class PostService {
           ],
         },
       },
+      // {
+      //   $addFields: {
+      //     layout: {
+      //       $arrayElemAt: [
+      //         ["classic", "column", "quote", "frame"],
+      //         { $floor: { $multiply: [{ $rand: {} }, 4] } },
+      //       ],
+      //     },
+      //   },
+      // },
       {
         $addFields: {
-          layout: {
-            $arrayElemAt: [
-              ["classic", "column", "quote", "frame"],
-              { $floor: { $multiply: [{ $rand: {} }, 4] } },
-            ],
-          },
-        },
+          layout: "classic"
+        }
       },
       {
         $project: {
