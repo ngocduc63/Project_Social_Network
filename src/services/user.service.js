@@ -29,19 +29,22 @@ class UserService {
 
   static async getUserInfo({ userId }, keyStore) {
     const userInfo = await userModel
-      .findById(convertToObjectIdMongodb(userId))
-      .lean();
-
+    .findById(convertToObjectIdMongodb(userId))
+    .lean();
+    
+    console.log("🚀 ~ UserService ~ getUserInfo ~ userInfo:", userInfo)
     const friendId = await CommonService.getUserIdByKeyStore(keyStore);
 
     if (friendId !== userId) {
-      userInfo.type = 'page';
       userInfo.friends = await FriendService.countFriends(userInfo._id.toString());
       const checkFriend = await FriendService.checkFriendExits(
         userInfo._id.toString(),
         friendId
       );
-      userInfo.isFriend = checkFriend.friend_status === FRIEND_STATUS.FRIEND;
+      if (checkFriend)
+        userInfo.isFriend =  checkFriend.friend_status === FRIEND_STATUS.FRIEND;
+      else 
+        userInfo.isFriend = false;
     }else {
       userInfo.friends = await FriendService.countFriends(userId);
     }
