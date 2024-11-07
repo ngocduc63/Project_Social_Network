@@ -17,6 +17,21 @@ var userSchema = new Schema(
       trim: true,
       unique: true,
     },
+    hometown: {
+      type: String,
+      trim: true,
+      unique: true,
+    },
+    address: {
+      type: String,
+      trim: true,
+      unique: true,
+    },
+    bio: {
+      type: String,
+      trim: true,
+      unique: true,
+    },
     password: {
       type: String,
       required: true,

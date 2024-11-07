@@ -23,7 +23,7 @@ class FriendService {
     return metadata;
   }
 
-  static async countFriends(userId, friendId) {
+  static async countFriends(userId) {
     const numFriends = await Friend.countDocuments({
       $or: [{ created_by_user: userId }, { friend_userId: userId }],
       friend_status: FRIEND_STATUS.FRIEND,

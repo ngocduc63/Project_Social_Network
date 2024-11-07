@@ -31,18 +31,23 @@ class UserService {
     const userInfo = await userModel
       .findById(convertToObjectIdMongodb(userId))
       .lean();
+
     const friendId = await CommonService.getUserIdByKeyStore(keyStore);
 
-    userInfo.numFriends = await FriendService.countFriends(
-      userInfo._id.toString(),
-      friendId
-    );
-    const checkFriend = await FriendService.checkFriendExits(
-      userInfo._id.toString(),
-      friendId
-    );
-    userInfo.isFriend = checkFriend.friend_status === FRIEND_STATUS.FRIEND;
-    
+    if (friendId !== userId) {
+      userInfo.type = 'page';
+      userInfo.friends = await FriendService.countFriends(userInfo._id.toString());
+      const checkFriend = await FriendService.checkFriendExits(
+        userInfo._id.toString(),
+        friendId
+      );
+      userInfo.isFriend = checkFriend.friend_status === FRIEND_STATUS.FRIEND;
+    }else {
+      userInfo.friends = await FriendService.countFriends(userId);
+    }
+
+    userInfo.guard = true;
+
     return getInfoData({
       fileds: [
         "_id",
@@ -51,8 +56,12 @@ class UserService {
         "gender",
         "cover",
         "createdAt",
-        "numFriends",
+        "friends",
         "isFriend",
+        "hometown",
+        "address",
+        "bio",
+        "guard"
       ],
       object: userInfo,
     });
