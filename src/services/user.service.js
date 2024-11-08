@@ -35,7 +35,6 @@ class UserService {
     const friendId = await CommonService.getUserIdByKeyStore(keyStore);
 
     if (friendId !== userId) {
-      userInfo.type = "page";
       const {mutualFriendCount, latestMutualFriends} = await FriendService.getMutualFriends(userId, friendId);
       userInfo.friends = await FriendService.countFriends(userInfo._id.toString());
       userInfo.mutualFriends = mutualFriendCount;
@@ -71,7 +70,6 @@ class UserService {
         "guard",
         "mutualFriends",
         "latestMutualFriends",
-        "type"
       ],
       object: userInfo,
     });
