@@ -1,7 +1,7 @@
 "use strict";
 
 const Comment = require("../models/comment.model");
-const { convertToObjectIdMongodb } = require("../utils");
+const { convertToObjectIdMongodb, getInfoData } = require("../utils");
 const { NotFoundError } = require("../core/error.response");
 const PostService = require("./post.service");
 const NotificationService = require("./notification.service");
@@ -81,7 +81,22 @@ class CommemtService {
     }
     NotificationService.pushNotiToSystem(notiInfo);
 
-    return comment;
+    const dataRes = comment.toJSON();
+    const userInfo = await CommonService.getUserInfo(userId);
+    dataRes.user = userInfo;
+    dataRes.content = comment.comment_content
+    dataRes.postId = comment.comment_postId
+    dataRes.postId = comment.comment_postId
+    dataRes.countChildComment = 0
+    
+    return getInfoData({fileds: [
+      '_id',
+      'user',
+      'content',
+      'postId',
+      'createdAt',
+      'countChildComment'
+    ], object: dataRes} );
   }
 
   static async findCommentByParentId(
