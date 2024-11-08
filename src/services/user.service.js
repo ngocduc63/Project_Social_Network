@@ -32,11 +32,14 @@ class UserService {
     .findById(convertToObjectIdMongodb(userId))
     .lean();
     
-    console.log("🚀 ~ UserService ~ getUserInfo ~ userInfo:", userInfo)
     const friendId = await CommonService.getUserIdByKeyStore(keyStore);
 
     if (friendId !== userId) {
+      const {mutualFriendCount, latestMutualFriends} = await FriendService.getMutualFriends(userId, friendId);
       userInfo.friends = await FriendService.countFriends(userInfo._id.toString());
+      userInfo.mutualFriends = mutualFriendCount;
+      userInfo.latestMutualFriends = latestMutualFriends;
+
       const checkFriend = await FriendService.checkFriendExits(
         userInfo._id.toString(),
         friendId
@@ -64,7 +67,9 @@ class UserService {
         "hometown",
         "address",
         "bio",
-        "guard"
+        "guard",
+        "mutualFriends",
+        "latestMutualFriends"
       ],
       object: userInfo,
     });

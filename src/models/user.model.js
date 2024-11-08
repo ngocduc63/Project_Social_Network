@@ -20,17 +20,14 @@ var userSchema = new Schema(
     hometown: {
       type: String,
       trim: true,
-      unique: true,
     },
     address: {
       type: String,
       trim: true,
-      unique: true,
     },
     bio: {
       type: String,
       trim: true,
-      unique: true,
     },
     password: {
       type: String,

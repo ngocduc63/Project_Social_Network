@@ -4,6 +4,7 @@ const Friend = require("../models/friend.model");
 const { BadRequestError } = require("../core/error.response");
 const { FRIEND_STATUS } = require("../utils/const.user");
 const CommonService = require("./common.service");
+const { convertToObjectIdMongodb } = require("../utils");
 
 class FriendService {
   static async getDataFriends(friends, userId) {
@@ -30,6 +31,76 @@ class FriendService {
     });
 
     return numFriends;
+  }
+
+  static async getMutualFriends(userId, friendId) {
+    const mutualFriends = await Friend.aggregate([
+      {
+        $match: {
+          friend_status: FRIEND_STATUS.FRIEND,
+          $or: [
+            { created_by_user: convertToObjectIdMongodb(userId) },
+            { friend_userId: convertToObjectIdMongodb(userId) },
+            { created_by_user: convertToObjectIdMongodb(friendId) },
+            { friend_userId: convertToObjectIdMongodb(friendId) },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          user1Friends: {
+            $addToSet: {
+              $cond: [
+                { $eq: ["$created_by_user", convertToObjectIdMongodb(userId)] },
+                "$friend_userId",
+                "$created_by_user",
+              ],
+            },
+          },
+          user2Friends: {
+            $addToSet: {
+              $cond: [
+                { $eq: ["$created_by_user", convertToObjectIdMongodb(friendId)] },
+                "$friend_userId",
+                "$created_by_user",
+              ],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          mutualFriends: { $setIntersection: ["$user1Friends", "$user2Friends"] },
+        },
+      },
+      {
+        $lookup: {
+          from: "Users",
+          localField: "mutualFriends",
+          foreignField: "_id",
+          as: "mutualFriendDetails",
+        },
+      },
+      {
+        $project: {
+          mutualFriends: 1,
+          mutualFriendDetails: {
+            _id: 1,
+            name: 1,
+            avatar: 1,
+          },
+        },
+      },
+      { $unwind: "$mutualFriendDetails" },
+      { $sort: { "mutualFriendDetails.createdAt": -1 } },
+      { $limit: 6 },
+    ]);
+  
+    const mutualFriendCount = mutualFriends[0]?.mutualFriends.length || 0;
+    const latestMutualFriends = mutualFriends[0]?.mutualFriendDetails || [];
+  
+    return { mutualFriendCount, latestMutualFriends };
   }
 
   static async getListFriend({ friendId, limit = 50, offset = 0 }, keyStore) {
