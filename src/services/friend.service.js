@@ -61,7 +61,9 @@ class FriendService {
           user2Friends: {
             $addToSet: {
               $cond: [
-                { $eq: ["$created_by_user", convertToObjectIdMongodb(friendId)] },
+                {
+                  $eq: ["$created_by_user", convertToObjectIdMongodb(friendId)],
+                },
                 "$friend_userId",
                 "$created_by_user",
               ],
@@ -71,7 +73,9 @@ class FriendService {
       },
       {
         $project: {
-          mutualFriends: { $setIntersection: ["$user1Friends", "$user2Friends"] },
+          mutualFriends: {
+            $setIntersection: ["$user1Friends", "$user2Friends"],
+          },
         },
       },
       {
@@ -84,11 +88,16 @@ class FriendService {
       },
       {
         $project: {
-          mutualFriends: 1,
           mutualFriendDetails: {
-            _id: 1,
-            name: 1,
-            avatar: 1,
+            $map: {
+              input: "$mutualFriendDetails",
+              as: "friend",
+              in: {
+                _id: "$$friend._id",
+                name: "$$friend.name",
+                avatar: "$$friend.avatar",
+              },
+            },
           },
         },
       },
@@ -96,10 +105,12 @@ class FriendService {
       { $sort: { "mutualFriendDetails.createdAt": -1 } },
       { $limit: 6 },
     ]);
-  
-    const mutualFriendCount = mutualFriends[0]?.mutualFriends.length || 0;
-    const latestMutualFriends = mutualFriends[0]?.mutualFriendDetails || [];
-  
+
+    const latestMutualFriends = mutualFriends.map(
+      (doc) => doc.mutualFriendDetails
+    );
+    const mutualFriendCount = latestMutualFriends.length;
+
     return { mutualFriendCount, latestMutualFriends };
   }
 

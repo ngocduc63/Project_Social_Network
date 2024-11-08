@@ -70,7 +70,8 @@ class UserService {
         "bio",
         "guard",
         "mutualFriends",
-        "latestMutualFriends"
+        "latestMutualFriends",
+        "type"
       ],
       object: userInfo,
     });
