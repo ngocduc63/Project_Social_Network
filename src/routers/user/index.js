@@ -21,6 +21,7 @@ router.use(permission('0000'))
 router.use(authentication)
 
 router.get('/get-user-info', asyncHandler(userController.getUserInfo))
+router.get('/get-post-of-user', asyncHandler(userController.getPostOfUser))
 
 router.put('/update-avatar', upload.single('avatar'), asyncHandler(userController.updateAvatar))
 router.put('/update-cover', upload.single('cover'), asyncHandler(userController.updateCover))

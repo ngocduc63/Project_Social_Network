@@ -17,36 +17,30 @@ const {
 } = require("../utils/const.common");
 
 class PostService {
-  static async getPostForUser({ page = 1, limit = 20, offset = 0 }, keyStore) {
-    const userId = await CommonService.getUserIdByKeyStore(keyStore);
-    const userIdMongo = convertToObjectIdMongodb(userId);
-
-    const num_page = parseInt(page) > 0 ? parseInt(page) : 1;
-    const num_limit = parseInt(limit) > 0 ? parseInt(limit) : 20;
-
-    const query = [
+  static getQueryNewFeed(userIdMongo) {
+    return [
       {
         $match: {
           $or: [
-            { post_status: POST_STATUS_TYPES.PUBLIC_POST }, // Lấy bài viết công khai
+            { post_status: POST_STATUS_TYPES.PUBLIC_POST },
             {
               post_status: POST_STATUS_TYPES.PRIVATE_POST,
               created_by_user: userIdMongo,
-            }, // Lấy bài viết riêng tư của chính người dùng
-            { post_status: POST_STATUS_TYPES.FRIEND_POST }, // Lấy bài viết của bạn bè, kiểm tra trong aggregation
+            }, 
+            { post_status: POST_STATUS_TYPES.FRIEND_POST },
           ],
         },
       },
       {
         $lookup: {
-          from: "Friends", // Tên collection chứa thông tin bạn bè
-          let: { postAuthorId: "$created_by_user" }, // Đặt biến từ created_by_user của bài post
+          from: "Friends", 
+          let: { postAuthorId: "$created_by_user" }, 
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$friend_status", FRIEND_STATUS.FRIEND] }, // Chỉ lấy các mối quan hệ bạn bè đã được chấp nhận
+                    { $eq: ["$friend_status", FRIEND_STATUS.FRIEND] }, 
                     {
                       $or: [
                         {
@@ -68,44 +62,44 @@ class PostService {
               },
             },
           ],
-          as: "friendRelation", // Tên mảng lưu quan hệ bạn bè sau khi lookup
+          as: "friendRelation", 
         },
       },
       {
         $addFields: {
-          isFriend: { $gt: [{ $size: "$friendRelation" }, 0] }, // Nếu có quan hệ bạn bè thì isFriend = true
+          isFriend: { $gt: [{ $size: "$friendRelation" }, 0] }, 
         },
       },
       {
         $lookup: {
-          from: "Users", // Tên collection chứa thông tin người dùng
-          localField: "created_by_user", // Trường trong bài viết
-          foreignField: "_id", // Trường trong collection Users
-          as: "user", // Tên mảng lưu thông tin người dùng
+          from: "Users", 
+          localField: "created_by_user", 
+          foreignField: "_id",
+          as: "user", 
         },
       },
       {
         $addFields: {
-          user: { $arrayElemAt: ["$user", 0] }, // Lấy phần tử đầu tiên của mảng user
+          user: { $arrayElemAt: ["$user", 0] },
         },
       },
       {
         $lookup: {
-          from: "Likes", // Tên collection lưu thông tin likes
-          let: { postId: "$_id" }, // Đặt biến postId từ _id của bài post
+          from: "Likes", 
+          let: { postId: "$_id" }, 
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$like_postId", "$$postId"] }, // Kiểm tra like của bài post này
-                    { $eq: ["$like_userId", userIdMongo] }, // Kiểm tra like bởi người dùng hiện tại
+                    { $eq: ["$like_postId", "$$postId"] }, 
+                    { $eq: ["$like_userId", userIdMongo] }, 
                   ],
                 },
               },
             },
           ],
-          as: "userLike", // Tên mảng lưu thông tin like của người dùng
+          as: "userLike",
         },
       },
       {
@@ -117,7 +111,7 @@ class PostService {
       {
         $match: {
           $or: [
-            { post_status: POST_STATUS_TYPES.PUBLIC_POST }, // Lấy bài viết công khai
+            { post_status: POST_STATUS_TYPES.PUBLIC_POST }, 
             {
               post_status: POST_STATUS_TYPES.PRIVATE_POST,
               created_by_user: userIdMongo,
@@ -127,13 +121,13 @@ class PostService {
                 { post_status: POST_STATUS_TYPES.FRIEND_POST },
                 { created_by_user: userIdMongo },
               ],
-            }, // Nếu người tạo bài viết là chính người dùng
+            }, 
             {
               $and: [
                 { post_status: POST_STATUS_TYPES.FRIEND_POST },
                 { isFriend: true },
               ],
-            }, // Bài viết bạn bè nếu là bạn
+            }, 
           ],
         },
       },
@@ -172,9 +166,20 @@ class PostService {
           likeCategory: 1,
           layout: 1,
           reactions: 1,
+          post_status: 1,
         },
       },
     ];
+  }
+
+  static async getPostForUser({ page = 1, limit = 20, offset = 0 }, keyStore, query = []) {
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+    const userIdMongo = convertToObjectIdMongodb(userId);
+
+    const num_page = parseInt(page) > 0 ? parseInt(page) : 1;
+    const num_limit = parseInt(limit) > 0 ? parseInt(limit) : 20;
+
+    if (query.length <=0 ) query = this.getQueryNewFeed(userIdMongo)
 
     const posts = await post.aggregate([
       ...query,

@@ -9,6 +9,11 @@ class UserController {
     new SuccessResponse(metadata).send(res);
   }
 
+  getPostOfUser = async (req, res, next) => {
+    const metadata = await userService.getPostOfusser(req.body, req.keyStore);
+    new SuccessResponse(metadata).send(res);
+  }
+
   updateAvatar = async (req, res, next) => {
     const metadata = await userService.updateAvatarService(req.file, req.keyStore)
     new SuccessResponse(metadata).send(res);
