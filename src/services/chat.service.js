@@ -15,11 +15,13 @@ class ChatService {
   }
 
   static async createMessage(roomId, senderId, content, type = "text") {
-    await messageModel.create({
+    const dataMess = await messageModel.create({
       created_by_user: senderId,
       room_id: roomId,
       data: { content, type },
     });
+
+    await roomModel.findOneAndUpdate({_id: roomId}, {$set: {last_message: dataMess._id}})
   }
 
   static async getListRoom({ page = 1, limit = 10 }, keyStore) {
@@ -37,10 +39,12 @@ class ChatService {
         const otherUserId = room.room_members.find(memberId => memberId.toString() !== userId.toString());
     
         const otherUser = await CommonService.getUserInfo(otherUserId);
-    
+        const last_message = await messageModel.findById(room.last_message)
+
         return {
           ...room.toObject(),
           friend: otherUser,
+          last_message_data: last_message
         };
       }));
   
