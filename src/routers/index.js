@@ -7,6 +7,7 @@ router.use('/api/access',require('./access'))
 router.use('/api/user',require('./user'))
 router.use('/api/friend',require('./friend'))
 router.use('/api/post',require('./post'))
+router.use('/api/chat',require('./chat'))
 router.use('/api/notification',require('./notification'))
 
 

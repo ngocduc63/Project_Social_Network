@@ -5,6 +5,7 @@ const { BadRequestError } = require("../core/error.response");
 const { FRIEND_STATUS } = require("../utils/const.user");
 const CommonService = require("./common.service");
 const { convertToObjectIdMongodb } = require("../utils");
+const ChatService = require("./chat.service");
 
 class FriendService {
   static async getDataFriends(friends, userId) {
@@ -220,6 +221,8 @@ class FriendService {
     );
 
     if (!rs) throw new BadRequestError("Not found friend");
+
+    await ChatService.createRoomChat(userId, [userId, friendId]);
 
     return true;
   }
