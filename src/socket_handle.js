@@ -56,9 +56,9 @@ const checkOnline = (socket) => {
 
 const onMessage = (socket) => {
   socket.on(EVENT_SINGLE_CHAT_MESSAGE, async (chatMessage) => {
-    const { roomId, content, sender, type } = JSON.parse(chatMessage);
-    await ChatService.createMessage(roomId, sender, content, );
-    io.to(roomId).emit(SUB_EVENT_RECEIVE_MESSAGE, chatMessage);
+    const { roomId, content, sender, type } = chatMessage;
+    const dataMess = await ChatService.createMessage(roomId, sender, content);
+    io.to(roomId).emit(SUB_EVENT_RECEIVE_MESSAGE, dataMess);
   });
 };
 
@@ -71,10 +71,18 @@ const onDisconnected = (socket) => {
 const onEachUserConnection = (socket) => {
   const fromUserId = socket.handshake.query.userId;
   addUserToMap(fromUserId, socket.id);
+  console.log("🚀 ~ user conneect success:", fromUserId);
 
   socket.on("join_room", (data) => {
-    const {roomId} = JSON.parse(data);
+    const { roomId } = data;
     socket.join(roomId);
+  });
+
+  socket.on("leave_room", (data) => {
+    const { roomId } = data;
+    if (socket.rooms.has(roomId)) {
+      socket.leave(roomId);
+    }
   });
 
   onMessage(socket);

@@ -25,6 +25,14 @@ class ChatService {
       { _id: roomId },
       { $set: { last_message: dataMess._id } }
     );
+
+    const userInfo = await CommonService.getUserInfo(senderId)
+
+    const rs = {
+      ...dataMess.toObject(),
+      sender: userInfo,
+    }
+    return rs;
   }
 
   static async getListRoom({ page = 1, limit = 10 }, keyStore) {
@@ -62,8 +70,8 @@ class ChatService {
     return { rooms: data, totalPage: Math.ceil(roomTotal / limit), roomTotal };
   }
 
-  static async getListMessage({ roomId, page = 1, limit = 20 }) {
-    const skip = (page - 1) * limit;
+  static async getListMessage({ roomId, page = 1, limit = 20, offset = 0 }) {
+    const skip = (page - 1) * limit + offset;
     const messages = await messageModel
       .find({ room_id: roomId })
       .sort({createdAt: -1})
