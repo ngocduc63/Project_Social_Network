@@ -16,6 +16,7 @@ router.use(permission('0000'))
 router.use(authentication)
 
 router.get('/list-room', asyncHandler(chatController.getListRoom))
+router.get('/list-mess', asyncHandler(chatController.getListMess))
 
 
 module.exports = router
