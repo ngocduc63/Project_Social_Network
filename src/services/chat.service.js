@@ -36,7 +36,7 @@ class ChatService {
       { new: true }
     );
 
-    const rsMess = await this.getDataMess(dataRoom, senderId);
+    const rsMess = await this.getDataMess(dataMess, senderId);
 
     const rsRoom = await this.getDataRoom(dataRoom);
 
