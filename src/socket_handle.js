@@ -4,6 +4,7 @@ const EVENT_IS_USER_ONLINE = "check_online";
 const EVENT_SINGLE_CHAT_MESSAGE = "single_chat_message";
 
 const SUB_EVENT_RECEIVE_MESSAGE = "receive_message";
+const SUB_EVENT_RECEIVE_ROOM = "receive_user_room";
 const SUB_EVENT_IS_USER_CONNECTED = "is_user_connected";
 const ON_CONNECTION = "connection";
 
@@ -57,8 +58,14 @@ const checkOnline = (socket) => {
 const onMessage = (socket) => {
   socket.on(EVENT_SINGLE_CHAT_MESSAGE, async (chatMessage) => {
     const { roomId, content, sender, type } = chatMessage;
-    const dataMess = await ChatService.createMessage(roomId, sender, content);
-    io.to(roomId).emit(SUB_EVENT_RECEIVE_MESSAGE, dataMess);
+    const {rsMess, rsRoom} = await ChatService.createMessage(roomId, sender, content);
+    // noti for room
+    io.to(roomId).emit(SUB_EVENT_RECEIVE_MESSAGE, rsMess);
+
+    // noti for user
+    for (const userId of rsRoom.room_members){
+      io.to(`chat_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_ROOM, rsRoom);
+    }
   });
 };
 
@@ -68,11 +75,8 @@ const onDisconnected = (socket) => {
   });
 };
 
-const onEachUserConnection = (socket) => {
-  const fromUserId = socket.handshake.query.userId;
-  addUserToMap(fromUserId, socket.id);
-  console.log("🚀 ~ user conneect success:", fromUserId);
-
+const handelRoom = (socket) => {
+  // room message
   socket.on("join_room", (data) => {
     const { roomId } = data;
     socket.join(roomId);
@@ -85,6 +89,28 @@ const onEachUserConnection = (socket) => {
     }
   });
 
+  // handle chatlist
+  socket.on("join_chat_list_room", (data) => {
+    const { userId } = data;
+    
+    console.log("🚀 ~ socket.on ~ `chat_${userId}`:", `chat_${userId}`)
+    socket.join(`chat_${userId}`);
+  })
+
+  socket.on("leave_chat_list_room", (data) => {
+    const { userId } = data;
+    if (socket.rooms.has(`chat_${userId}`)) {
+      socket.leave(`chat_${userId}`);
+    }
+  })
+}
+
+const onEachUserConnection = (socket) => {
+  const fromUserId = socket.handshake.query.userId;
+  addUserToMap(fromUserId, socket.id);
+  console.log("🚀 ~ user conneect success:", fromUserId);
+  
+  handelRoom(socket);
   onMessage(socket);
   checkOnline(socket);
   onDisconnected(socket);

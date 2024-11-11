@@ -14,6 +14,15 @@ class ChatService {
     });
   }
 
+  static async getDataMess(dataMess, senderId){
+    const userInfo = await CommonService.getUserInfo(senderId)
+
+    return {
+      ...dataMess.toObject(),
+      sender: userInfo,
+    }
+  }
+
   static async createMessage(roomId, senderId, content, type = "text") {
     const dataMess = await messageModel.create({
       created_by_user: senderId,
@@ -21,24 +30,39 @@ class ChatService {
       data: { content, type },
     });
 
-    await roomModel.findOneAndUpdate(
+    const dataRoom = await roomModel.findOneAndUpdate(
       { _id: roomId },
-      { $set: { last_message: dataMess._id } }
+      { $set: { last_message: dataMess._id } },
+      { new: true }
     );
 
-    const userInfo = await CommonService.getUserInfo(senderId)
+    const rsMess = await this.getDataMess(dataRoom, senderId);
 
-    const rs = {
-      ...dataMess.toObject(),
-      sender: userInfo,
-    }
-    return rs;
+    const rsRoom = await this.getDataRoom(dataRoom);
+
+    return {rsMess, rsRoom};
   }
 
-  static async getListRoom({ page = 1, limit = 10 }, keyStore) {
+  static async getDataRoom(room) {
+    const membersInfo = await Promise.all(
+      room.room_members.map((memberId) => CommonService.getUserInfo(memberId))
+    );
+
+    const last_message = await messageModel.findById(room.last_message);
+    const dataMess = await this.getDataMess(last_message, last_message.created_by_user);
+
+    return {
+      ...room.toObject(),
+      membersInfo,
+      last_message_data: dataMess,
+    };
+}
+
+
+  static async getListRoom({ page = 1, limit = 10, offset = 0 }, keyStore) {
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit + offset;
 
     const rooms = await roomModel
       .find({ room_members: { $in: [convertToObjectIdMongodb(userId)] } })
@@ -52,18 +76,7 @@ class ChatService {
 
     const data = await Promise.all(
       rooms.map(async (room) => {
-        const otherUserId = room.room_members.find(
-          (memberId) => memberId.toString() !== userId.toString()
-        );
-
-        const otherUser = await CommonService.getUserInfo(otherUserId);
-        const last_message = await messageModel.findById(room.last_message);
-
-        return {
-          ...room.toObject(),
-          friend: otherUser,
-          last_message_data: last_message,
-        };
+        return await this.getDataRoom(room, userId)
       })
     );
 
