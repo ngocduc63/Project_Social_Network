@@ -11,7 +11,7 @@ const  getAccessTokenStringee = async (keyStore) => {
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
   var now = Math.floor(Date.now() / 1000);
-  var exp = now + 3600;
+  var exp = now + 365 * 24 * 60 * 60;
 
   var header = { cty: "stringee-api;v=1" };
   var payload = {
