@@ -70,7 +70,9 @@ const onMessage = (socket) => {
         data: rsRoom,
         type: "message"
       }
-      io.to(`user_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_NOTIFICATION, dataNotiForUser);
+      if(userId.toString() !== rsRoom.sender_by_user){
+        io.to(`user_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_NOTIFICATION, dataNotiForUser);
+      }
     }
   });
 };
