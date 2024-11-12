@@ -6,6 +6,7 @@ const EVENT_SINGLE_CHAT_MESSAGE = "single_chat_message";
 const SUB_EVENT_RECEIVE_MESSAGE = "receive_message";
 const SUB_EVENT_RECEIVE_ROOM = "receive_user_room";
 const SUB_EVENT_IS_USER_CONNECTED = "is_user_connected";
+const SUB_EVENT_RECEIVE_NOTIFICATION = "receive_noti";
 const ON_CONNECTION = "connection";
 
 const { Server } = require("socket.io");
@@ -65,6 +66,11 @@ const onMessage = (socket) => {
     // noti for user
     for (const userId of rsRoom.room_members){
       io.to(`chat_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_ROOM, rsRoom);
+      const dataNotiForUser = {
+        data: rsRoom,
+        type: "message"
+      }
+      io.to(`user_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_NOTIFICATION, dataNotiForUser);
     }
   });
 };
@@ -101,6 +107,19 @@ const handelRoom = (socket) => {
     const { userId } = data;
     if (socket.rooms.has(`chat_${userId}`)) {
       socket.leave(`chat_${userId}`);
+    }
+  })
+
+  // handle noti for user
+  socket.on("join_noti_for_user", (data) => {
+    const { userId } = data;
+    socket.join(`user_${userId}`);
+  })
+
+  socket.on("join_noti_for_user", (data) => {
+    const { userId } = data;
+    if (socket.rooms.has(`user_${userId}`)) {
+      socket.leave(`user_${userId}`);
     }
   })
 }
