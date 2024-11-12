@@ -20,6 +20,7 @@ router.use(permission('0000'))
 // check access token
 router.use(authentication)
 
+router.get('/get-token-stringee', asyncHandler(userController.getTokenStringee))
 router.get('/get-user-info', asyncHandler(userController.getUserInfo))
 router.get('/get-post-of-user', asyncHandler(userController.getPostOfUser))
 

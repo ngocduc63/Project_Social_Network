@@ -1,11 +1,17 @@
 "use strict";
 
 const { OK, CREATED, SuccessResponse } = require("../core/success.response");
+const { getAccessTokenStringee } = require("../helpers/getAccessTokenStringee");
 const userService = require("../services/user.service");
 
 class UserController {
   getUserInfo = async (req, res, next) => { 
     const metadata = await userService.getUserInfo(req.body, req.keyStore);
+    new SuccessResponse(metadata).send(res);
+  }
+
+  getTokenStringee = async (req, res, next) => { 
+    const metadata = await getAccessTokenStringee(req.keyStore);
     new SuccessResponse(metadata).send(res);
   }
 
