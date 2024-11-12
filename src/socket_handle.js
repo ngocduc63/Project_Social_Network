@@ -98,8 +98,6 @@ const handelRoom = (socket) => {
   // handle chatlist
   socket.on("join_chat_list_room", (data) => {
     const { userId } = data;
-    
-    console.log("🚀 ~ socket.on ~ `chat_${userId}`:", `chat_${userId}`)
     socket.join(`chat_${userId}`);
   })
 
@@ -116,7 +114,7 @@ const handelRoom = (socket) => {
     socket.join(`user_${userId}`);
   })
 
-  socket.on("join_noti_for_user", (data) => {
+  socket.on("leave_noti_for_user", (data) => {
     const { userId } = data;
     if (socket.rooms.has(`user_${userId}`)) {
       socket.leave(`user_${userId}`);
