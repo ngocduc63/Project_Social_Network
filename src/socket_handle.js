@@ -11,6 +11,7 @@ const ON_CONNECTION = "connection";
 
 const { Server } = require("socket.io");
 const ChatService = require("./services/chat.service");
+const CommonService = require("./services/common.service");
 
 let io;
 
@@ -24,6 +25,14 @@ const setupSocketServer = (server) => {
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
     },
+  });
+
+  io.use((socket, next) => {
+    if (socket.handshake.query) {
+      let callerId = socket.handshake.query.callerId;
+      socket.user = callerId;
+      next();
+    }
   });
 
   io.on(ON_CONNECTION, (socket) => {
@@ -83,7 +92,7 @@ const onDisconnected = (socket) => {
   });
 };
 
-const handelRoom = (socket) => {
+const handleRoom = (socket) => {
   // room message
   socket.on("join_room", (data) => {
     const { roomId } = data;
@@ -124,12 +133,60 @@ const handelRoom = (socket) => {
   })
 }
 
+const handleCall = (socket) => {
+  // room message 
+  socket.on("makeCall", async (data) => {
+    const calleeId = data.calleeId;
+    const sdpOffer = data.sdpOffer;
+    const userInfo = await CommonService.getUserInfo(socket.user);
+
+    socket.to(calleeId).emit("newCall", {
+      callerId: socket.user,
+      sdpOffer: sdpOffer,
+      callerInfo: userInfo, 
+    });
+  });
+    
+
+  socket.on("answerCall", (data) => {
+    let callerId = data.callerId;
+    let sdpAnswer = data.sdpAnswer;
+
+    socket.to(callerId).emit("callAnswered", {
+      callee: socket.user,
+      sdpAnswer: sdpAnswer,
+    });
+  });
+
+  socket.on("IceCandidate", (data) => {
+    let calleeId = data.calleeId;
+    let iceCandidate = data.iceCandidate;
+
+    socket.to(calleeId).emit("IceCandidate", {
+      sender: socket.user,
+      iceCandidate: iceCandidate,
+    });
+  });
+
+  socket.on("end_call", (data) =>{
+    let calleeId = data.calleeId;
+
+    socket.to(calleeId).emit("end_call_noti", {
+      sender: socket.user,
+    });
+  })
+}
+
+
+
 const onEachUserConnection = (socket) => {
   const fromUserId = socket.handshake.query.userId;
+  socket.join(fromUserId);
   addUserToMap(fromUserId, socket.id);
   console.log("🚀 ~ user conneect success:", fromUserId);
   
-  handelRoom(socket);
+  handleRoom(socket);
+  handleCall(socket)
   onMessage(socket);
   checkOnline(socket);
   onDisconnected(socket);
