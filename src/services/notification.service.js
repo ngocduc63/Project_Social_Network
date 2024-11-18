@@ -1,8 +1,10 @@
 "use strict";
 
 const NotiModel = require("../models/notification.model");
+const { handleNotiForUser } = require("../socket_handle");
 const { convertToObjectIdMongodb } = require("../utils");
 const { NOTIFICATION_TYPES } = require("../utils/const.notification");
+const CommonService = require("./common.service");
 
 class NotificationService {
   static async pushNotiToSystem({
@@ -34,6 +36,14 @@ class NotificationService {
       noti_receivedId: receivedId,
       noti_options: options,
     });
+
+    const userInfo = await CommonService.getUserInfo(senderId);
+    const dataNoti = {
+      ...newNoti.toObject(),
+      user: userInfo
+    }
+
+    await handleNotiForUser(dataNoti, receivedId);
 
     return newNoti;
   }

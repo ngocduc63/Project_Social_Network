@@ -38,14 +38,14 @@ class LikeService {
       like_category: category,
     });
 
-    await PostService.updateNumLike(1, postId, likeCategory, postInfo);
-
+    const rsPost = await PostService.updateNumLike(1, postId, likeCategory, postInfo);
+    
     // notifi
     const notiInfo = {
       type: NOTIFICATION_TYPES.LIKE_POST,
       receivedId: postInfo.created_by_user.toString(),
       senderId: userId,
-      options: {'postId': postId}
+      options: {post: rsPost}
     }
     NotificationService.pushNotiToSystem(notiInfo);
 

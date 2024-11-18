@@ -15,6 +15,7 @@ const {
   allowedImageTypes,
   allowedVideoTypes,
 } = require("../utils/const.common");
+const { handleNotiForPost } = require("../socket_handle");
 
 class PostService {
   static getQueryNewFeed(userIdMongo) {
@@ -305,14 +306,21 @@ class PostService {
   }
 
   static async updateNumComment(num, postId) {
-    await post.updateOne(
+    const rsPost = await post.findOneAndUpdate(
       {
         _id: convertToObjectIdMongodb(postId),
       },
       {
         $inc: { post_num_comment: num },
+      },
+      {
+        returnDocument: 'after'
       }
     );
+
+    await handleNotiForPost(resultPost, postId)
+
+    return resultPost
   }
 
   static async updateNumLike(num, postId, likeCategory, postInfo) {
@@ -354,14 +362,21 @@ class PostService {
       );
     }
 
-    await post.updateOne(
+    const resultPost = await post.findOneAndUpdate(
       {
         _id: postObjectId,
       },
       {
         $inc: { post_num_like: num },
-      }
+      },
+      {
+        returnDocument: 'after'
+      },
     );
+
+    await handleNotiForPost(resultPost, postId)
+
+    return resultPost
   }
 
   static async updateReactions(
@@ -428,14 +443,21 @@ class PostService {
   }
 
   static async updateNumShare(num, postId) {
-    await post.updateOne(
+    const rsPost = await post.findOneAndUpdate(
       {
         _id: convertToObjectIdMongodb(postId),
       },
       {
         $inc: { post_num_share: num },
+      },
+      {
+        returnDocument: 'after'
       }
     );
+
+    await handleNotiForPost(resultPost, postId)
+
+    return resultPost
   }
 }
 

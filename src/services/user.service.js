@@ -35,8 +35,8 @@ class UserService {
     if (!userInfo) throw new NotFoundError(`User ${userId} does not exist`);
 
     const friendId = await CommonService.getUserIdByKeyStore(keyStore);
-    let condition = [];
     const userIdMongo = convertToObjectIdMongodb(userId);
+    const userIdRequest= convertToObjectIdMongodb(friendId);
     const matchCondition = {
       created_by_user: userIdMongo,
     };
@@ -87,7 +87,7 @@ class UserService {
                 $expr: {
                   $and: [
                     { $eq: ["$like_postId", "$$postId"] },
-                    { $eq: ["$like_userId", userIdMongo] },
+                    { $eq: ["$like_userId", userIdRequest] },
                   ],
                 },
               },

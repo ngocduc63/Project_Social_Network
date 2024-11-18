@@ -7,6 +7,8 @@ const SUB_EVENT_RECEIVE_MESSAGE = "receive_message";
 const SUB_EVENT_RECEIVE_ROOM = "receive_user_room";
 const SUB_EVENT_IS_USER_CONNECTED = "is_user_connected";
 const SUB_EVENT_RECEIVE_NOTIFICATION = "receive_noti";
+const SUB_EVENT_SEND_NOTIFICATION_USER = "notification_for_user";
+const SUB_EVENT_SEND_NOTIFICATION_POST = "notification_for_post";
 const ON_CONNECTION = "connection";
 
 const { Server } = require("socket.io");
@@ -25,14 +27,6 @@ const setupSocketServer = (server) => {
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
     },
-  });
-
-  io.use((socket, next) => {
-    if (socket.handshake.query) {
-      let callerId = socket.handshake.query.callerId;
-      socket.user = callerId;
-      next();
-    }
   });
 
   io.on(ON_CONNECTION, (socket) => {
@@ -177,19 +171,43 @@ const handleCall = (socket) => {
   })
 }
 
+const handleNotiForUser = async (data, userId) => {
+  await io.to(userId).emit(SUB_EVENT_SEND_NOTIFICATION_USER, data);
+}
+
+const handleNotiForPost = async (data, postId) => {
+  await io.to(`post_${postId}`).emit(SUB_EVENT_SEND_NOTIFICATION_POST, data);
+}
+
+
+const handleRoomNotiForPost = (socket) => {
+  socket.on("join_post_noti", (data) => {
+    const { postId } = data;
+    socket.join(`post_${postId}`);
+  });
+
+  socket.on("leave_post_noti", (data) => {
+    const { postId } = data;
+    if (socket.rooms.has(`post_${postId}`)) {
+      socket.leave(`post_${postId}`);
+    }
+  });
+}
 
 
 const onEachUserConnection = (socket) => {
   const fromUserId = socket.handshake.query.userId;
+  socket.user = fromUserId;
   socket.join(fromUserId);
   addUserToMap(fromUserId, socket.id);
   console.log("🚀 ~ user conneect success:", fromUserId);
   
   handleRoom(socket);
-  handleCall(socket)
+  handleCall(socket);
+  handleRoomNotiForPost(socket);
   onMessage(socket);
   checkOnline(socket);
   onDisconnected(socket);
 };
 
-module.exports = { setupSocketServer };
+module.exports = { setupSocketServer, handleNotiForUser, handleNotiForPost };
