@@ -38,7 +38,7 @@ class LikeService {
       like_category: category,
     });
 
-    const rsPost = await PostService.updateNumLike(1, postId, likeCategory, postInfo);
+    const rsPost = await PostService.updateNumLike(1, postId, likeCategory, postInfo, userId);
     
     // notifi
     const notiInfo = {
@@ -47,6 +47,7 @@ class LikeService {
       senderId: userId,
       options: {post: rsPost}
     }
+
     NotificationService.pushNotiToSystem(notiInfo);
 
     return true;
@@ -70,7 +71,7 @@ class LikeService {
         { $set: { like_category: likeCategory } }
       );
 
-      await PostService.updateReactions(postId, likeCategory, postInfo, likeInfo.like_category);
+      await PostService.updateReactions(postId, likeCategory, postInfo, likeInfo.like_category, userId);
     }else {
       await Like.create({
         like_postId: postId,
@@ -78,7 +79,7 @@ class LikeService {
         like_category: category,
       });
 
-      await PostService.updateNumLike(1, postId, likeCategory, postInfo);
+      await PostService.updateNumLike(1, postId, likeCategory, postInfo, userId);
     }
     
 
@@ -103,7 +104,7 @@ class LikeService {
 
     await Like.deleteOne({ like_postId: postId, like_userId: userId });
 
-    await PostService.updateNumLike(-1, postId, likeInfo.like_category, postInfo);
+    await PostService.updateNumLike(-1, postId, likeInfo.like_category, postInfo, userId);
 
     return true;
   }

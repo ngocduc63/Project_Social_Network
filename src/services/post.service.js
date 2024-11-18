@@ -230,7 +230,7 @@ class PostService {
   }
 
   static getPostById = async (postId) => {
-    return await post.findById(convertToObjectIdMongodb(postId));
+    return await post.findById(convertToObjectIdMongodb(postId)).lean();
   };
 
   static async createPostImage(imagePathStr, userInfo, isUpdateAvatar = true) {
@@ -318,12 +318,12 @@ class PostService {
       }
     );
 
-    await handleNotiForPost(resultPost, postId)
+    await handleNotiForPost(rsPost, postId)
 
-    return resultPost
+    return rsPost
   }
 
-  static async updateNumLike(num, postId, likeCategory, postInfo) {
+  static async updateNumLike(num, postId, likeCategory, postInfo, userId) {
     const postObjectId = convertToObjectIdMongodb(postId);
 
     const existingReaction = postInfo?.reactions.find(
@@ -374,6 +374,8 @@ class PostService {
       },
     );
 
+    resultPost.userId = userId;
+    resultPost.likeCategory = likeCategory;
     await handleNotiForPost(resultPost, postId)
 
     return resultPost
@@ -383,7 +385,8 @@ class PostService {
     postId,
     likeCategory,
     postInfo,
-    lastLikeCategory
+    lastLikeCategory,
+    userId
   ) {
     if (likeCategory === lastLikeCategory) return;
 
@@ -440,6 +443,14 @@ class PostService {
         }
       );
     }
+
+    const rsPost = await post.findById(postId).lean();
+    rsPost.userId = userId;
+    rsPost.likeCategory = likeCategory;
+    await handleNotiForPost(rsPost, postId)
+
+    return rsPost;
+
   }
 
   static async updateNumShare(num, postId) {
@@ -455,9 +466,9 @@ class PostService {
       }
     );
 
-    await handleNotiForPost(resultPost, postId)
+    await handleNotiForPost(rsPost, postId)
 
-    return resultPost
+    return rsPost
   }
 }
 

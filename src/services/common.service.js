@@ -13,6 +13,10 @@ class CommonService {
     });
   };
 
+  static getPostInfo = async (postId) => {
+    return await post.findById(convertToObjectIdMongodb(postId)).lean();
+  };
+
   static getUserIdByKeyStore = async (keyStore) => {
     return await keyStore.user.toString();
   };

@@ -176,14 +176,16 @@ const handleNotiForUser = async (data, userId) => {
 }
 
 const handleNotiForPost = async (data, postId) => {
-  await io.to(`post_${postId}`).emit(SUB_EVENT_SEND_NOTIFICATION_POST, data);
+  await io.to(`post_${postId}`).emit(`${SUB_EVENT_SEND_NOTIFICATION_POST}_${postId}`, data);
 }
 
 
 const handleRoomNotiForPost = (socket) => {
-  socket.on("join_post_noti", (data) => {
+  socket.on("join_post_noti", async (data) => {
     const { postId } = data;
     socket.join(`post_${postId}`);
+    const postData = await CommonService.getPostInfo(postId);
+    handleNotiForPost(postData, postId);
   });
 
   socket.on("leave_post_noti", (data) => {
