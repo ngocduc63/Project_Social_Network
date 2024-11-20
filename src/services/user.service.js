@@ -165,7 +165,7 @@ class UserService {
     } else {
       userInfo.friends = await FriendService.countFriends(userId);
       userInfo.listFriend = await FriendService.getListFriend(
-        { userId, limit: 6 },
+        { friendId: userId, limit: 6 },
         keyStore
       );
     }
