@@ -158,10 +158,7 @@ class UserService {
         friendId
       );
 
-      if (checkFriend) {
-        userInfo.isFriend = checkFriend.friend_status === FRIEND_STATUS.FRIEND;
-        userInfo.friendStatus = checkFriend.friend_status;
-      } else userInfo.isFriend = false;
+      userInfo.friendStatus = checkFriend;
     } else {
       userInfo.friends = await FriendService.countFriends(userId);
       userInfo.listFriend = await FriendService.getListFriend(
@@ -181,7 +178,6 @@ class UserService {
         "cover",
         "createdAt",
         "friends",
-        "isFriend",
         "hometown",
         "address",
         "bio",
