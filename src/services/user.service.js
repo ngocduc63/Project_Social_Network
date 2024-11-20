@@ -188,6 +188,7 @@ class UserService {
         "guard",
         "mutualFriends",
         "latestMutualFriends",
+        "listFriend",
       ],
       object: userInfo,
     });
