@@ -189,6 +189,7 @@ class UserService {
         "mutualFriends",
         "latestMutualFriends",
         "listFriend",
+        "friendStatus",
       ],
       object: userInfo,
     });
