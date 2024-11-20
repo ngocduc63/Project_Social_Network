@@ -115,31 +115,40 @@ class FriendService {
     return { mutualFriendCount, latestMutualFriends };
   }
 
-  static async getListFriend({ friendId, limit = 50, offset = 0 }, keyStore) {
+  static async getListFriend(
+    { friendId, page = 1, limit = 50, offset = 0 },
+    keyStore
+  ) {
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
     const friend = await CommonService.getUserInfo(friendId);
 
     if (!friend) throw new BadRequestError("User not found");
 
-    if (friendId === userId) {
-      const friends = await Friend.find({
-        $or: [{ created_by_user: userId }, { friend_userId: userId }],
-        friend_status: FRIEND_STATUS.FRIEND,
-      });
+    const checkExistFriend = await this.checkFriendExits(userId, friendId);
+    if (!checkExistFriend?.friend_status === FRIEND_STATUS.FRIEND)
+      throw new BadRequestError("Friend not found");
 
-      return await this.getDataFriends(friends, userId);
-    } else {
-      const checkExistFriend = await this.checkFriendExits(userId, friendId);
-      if (!checkExistFriend?.friend_status === FRIEND_STATUS.FRIEND)
-        throw new BadRequestError("Friend not found");
+    const friends = await Friend.find({
+      $or: [{ created_by_user: friendId }, { friend_userId: friendId }],
+      friend_status: FRIEND_STATUS.FRIEND,
+    })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-      const friends = await Friend.find({
-        $or: [{ created_by_user: friendId }, { friend_userId: friendId }],
-        friend_status: FRIEND_STATUS.FRIEND,
-      });
+    const total = await Friend.countDocuments({
+      $or: [{ created_by_user: friendId }, { friend_userId: friendId }],
+      friend_status: FRIEND_STATUS.FRIEND,
+    });
 
-      return await this.getDataFriends(friends, userId);
-    }
+    const dataFriend = await this.getDataFriends(friends, userId);
+
+    return {
+      friends: dataFriend,
+      page: page,
+      totalFriend: total,
+      totalPage: Math.ceil(total / limit),
+      page: page,
+    };
   }
 
   static async checkFriendExits(userId, friendId) {

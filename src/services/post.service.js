@@ -177,9 +177,6 @@ class PostService {
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
     const userIdMongo = convertToObjectIdMongodb(userId);
 
-    const num_page = parseInt(page) > 0 ? parseInt(page) : 1;
-    const num_limit = parseInt(limit) > 0 ? parseInt(limit) : 20;
-
     if (query.length <=0 ) query = this.getQueryNewFeed(userIdMongo)
 
     const posts = await post.aggregate([
@@ -188,10 +185,10 @@ class PostService {
         $sort: { createdAt: -1 },
       },
       {
-        $skip: (num_page - 1) * num_limit,
+        $skip: (page - 1) * limit,
       },
       {
-        $limit: num_limit,
+        $limit: limit,
       },
     ]);
 
@@ -204,8 +201,8 @@ class PostService {
     return {
       posts: posts,
       totalPost: total,
-      totalPage: Math.ceil(total / num_limit),
-      page: num_page,
+      totalPage: Math.ceil(total / limit),
+      page: page,
     };
   }
 
