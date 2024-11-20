@@ -36,7 +36,7 @@ class UserService {
 
     const friendId = await CommonService.getUserIdByKeyStore(keyStore);
     const userIdMongo = convertToObjectIdMongodb(userId);
-    const userIdRequest= convertToObjectIdMongodb(friendId);
+    const userIdRequest = convertToObjectIdMongodb(friendId);
     const matchCondition = {
       created_by_user: userIdMongo,
     };
@@ -59,7 +59,7 @@ class UserService {
         matchCondition.$or = [{ post_status: POST_STATUS_TYPES.PUBLIC_POST }];
       }
     }
-    
+
     const query = [
       {
         $match: matchCondition,
@@ -145,9 +145,11 @@ class UserService {
     if (friendId !== userId) {
       const { mutualFriendCount, latestMutualFriends } =
         await FriendService.getMutualFriends(userId, friendId);
+
       userInfo.friends = await FriendService.countFriends(
         userInfo._id.toString()
       );
+
       userInfo.mutualFriends = mutualFriendCount;
       userInfo.latestMutualFriends = latestMutualFriends;
 
@@ -155,11 +157,17 @@ class UserService {
         userInfo._id.toString(),
         friendId
       );
-      if (checkFriend)
+
+      if (checkFriend) {
         userInfo.isFriend = checkFriend.friend_status === FRIEND_STATUS.FRIEND;
-      else userInfo.isFriend = false;
+        userInfo.friendStatus = checkFriend.friend_status;
+      } else userInfo.isFriend = false;
     } else {
       userInfo.friends = await FriendService.countFriends(userId);
+      userInfo.listFriend = await FriendService.getListFriend(
+        { userId, limit: 6 },
+        keyStore
+      );
     }
 
     userInfo.guard = true;

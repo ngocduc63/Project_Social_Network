@@ -34,7 +34,7 @@ class FriendService {
     return numFriends;
   }
 
-  static async getMutualFriends(userId, friendId) {
+  static async getMutualFriends(userId, friendId, limit = 6) {
     const mutualFriends = await Friend.aggregate([
       {
         $match: {
@@ -104,7 +104,7 @@ class FriendService {
       },
       { $unwind: "$mutualFriendDetails" },
       { $sort: { "mutualFriendDetails.createdAt": -1 } },
-      { $limit: 6 },
+      { $limit: limit },
     ]);
 
     const latestMutualFriends = mutualFriends.map(
