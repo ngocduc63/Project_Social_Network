@@ -2,25 +2,26 @@ const { isTypedArray } = require("lodash");
 const messageModel = require("../models/message.model");
 const roomModel = require("../models/room.model");
 const CommonService = require("./common.service");
-const UserService = require("./user.service");
 const { convertToObjectIdMongodb } = require("../utils");
+const { NotFoundError } = require("../core/error.response");
 
 class ChatService {
   static async createRoomChat(userId, members, roomName = "") {
-    await roomModel.create({
+    const data = await roomModel.create({
       created_by_user: userId,
       room_name: roomName,
       room_members: members,
     });
+    return data;
   }
 
-  static async getDataMess(dataMess, senderId){
-    const userInfo = await CommonService.getUserInfo(senderId)
+  static async getDataMess(dataMess, senderId) {
+    const userInfo = await CommonService.getUserInfo(senderId);
 
     return {
       ...dataMess.toObject(),
       sender: userInfo,
-    }
+    };
   }
 
   static async createMessage(roomId, senderId, content, type = "text") {
@@ -40,7 +41,7 @@ class ChatService {
 
     const rsRoom = await this.getDataRoom(dataRoom);
 
-    return {rsMess, rsRoom};
+    return { rsMess, rsRoom };
   }
 
   static async getDataRoom(room) {
@@ -49,15 +50,19 @@ class ChatService {
     );
 
     const last_message = await messageModel.findById(room.last_message);
-    const dataMess = await this.getDataMess(last_message, last_message.created_by_user);
+    let dataMess;
+    if (last_message)
+      dataMess = await this.getDataMess(
+        last_message,
+        last_message.created_by_user
+      );
 
     return {
       ...room.toObject(),
       membersInfo,
       last_message_data: dataMess,
     };
-}
-
+  }
 
   static async getListRoom({ page = 1, limit = 10, offset = 0 }, keyStore) {
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
@@ -66,7 +71,7 @@ class ChatService {
 
     const rooms = await roomModel
       .find({ room_members: { $in: [convertToObjectIdMongodb(userId)] } })
-      .sort({updatedAt: -1})
+      .sort({ updatedAt: -1 })
       .skip(skip)
       .limit(limit);
 
@@ -76,18 +81,34 @@ class ChatService {
 
     const data = await Promise.all(
       rooms.map(async (room) => {
-        return await this.getDataRoom(room, userId)
+        return await this.getDataRoom(room, userId);
       })
     );
 
     return { rooms: data, totalPage: Math.ceil(roomTotal / limit), roomTotal };
   }
 
+  static async getRoom({ friendId }, keyStore) {
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+
+    const room = await roomModel.findOne({
+        room_members: { $all: [convertToObjectIdMongodb(userId), convertToObjectIdMongodb(friendId)] }, 
+        $expr: { $eq: [{ $size: "$room_members" }, 2] }
+    });
+
+    if (!room) {
+        throw new NotFoundError('Room not found');
+    }
+
+    return await this.getDataRoom(room, userId); 
+}
+
+
   static async getListMessage({ roomId, page = 1, limit = 20, offset = 0 }) {
     const skip = (page - 1) * limit + offset;
     const messages = await messageModel
       .find({ room_id: roomId })
-      .sort({createdAt: -1})
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 

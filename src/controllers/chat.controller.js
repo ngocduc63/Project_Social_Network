@@ -9,6 +9,11 @@ class ChatConstroller {
         new SuccessResponse(metadata).send(res);
       };
     
+    getRoom = async (req, res, next) => {
+      const metadata = await ChatService.getRoom(req.body, req.keyStore);
+      new SuccessResponse(metadata).send(res);
+   };
+
     getListMess = async (req, res, next) => {
       const metadata = await ChatService.getListMessage(req.body);
       new SuccessResponse(metadata).send(res);

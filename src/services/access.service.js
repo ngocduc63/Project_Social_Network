@@ -14,7 +14,7 @@ const {
 } = require("../core/error.response");
 const KeyTokenService = require("./keyToken.service");
 const { createNewApiKey } = require("./apikey.service");
-const { ROLE_USER } = require("../utils/const.user");
+const { ROLE_USER, GENDER_USER } = require("../utils/const.user");
 
 
 class AccessService {
@@ -122,7 +122,7 @@ class AccessService {
     // 5- get data return login
   };
 
-  static signUp = async ({ name, email, password }) => {
+  static signUp = async ({ name, email, password, gender = GENDER_USER.MALE }) => {
     const holedUser = await userModel.findOne({ email }).lean();
 
     if (holedUser) throw new BadRequestError("Error: Shop already registered!");
@@ -134,6 +134,8 @@ class AccessService {
       email,
       password: passwordHash,
       roles: [ROLE_USER.USER],
+      gender: gender,
+
     });
     if (!newUser) throw new BadRequestError("Error: cannot create user!");
 

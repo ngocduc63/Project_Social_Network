@@ -169,7 +169,6 @@ class FriendService {
     if (!friend) throw new BadRequestError("Not found friend");
 
     const checkExistFriend = await this.checkFriendExits(userId, friendId);
-    console.log("first");
     if (
       checkExistFriend &&
       checkExistFriend.friend_status !== FRIEND_STATUS.UNFRIEND
@@ -182,7 +181,7 @@ class FriendService {
       checkExistFriend.friend_status == FRIEND_STATUS.UNFRIEND
     ) {
       let rs;
-      if ((checkExistFriend.created_by_user = userId)) {
+      if (checkExistFriend.created_by_user.toString() === userId) {
         rs = await Friend.findOneAndUpdate(
           {
             created_by_user: userId,
@@ -199,7 +198,11 @@ class FriendService {
             friend_userId: userId,
           },
           {
-            $set: { friend_status: FRIEND_STATUS.FOLLOW },
+            $set: {
+              created_by_user: userId,
+              friend_userId: friendId,
+              friend_status: FRIEND_STATUS.FOLLOW,
+            },
           }
         );
       }
@@ -231,9 +234,11 @@ class FriendService {
 
     if (!rs) throw new BadRequestError("Not found friend");
 
-    await ChatService.createRoomChat(userId, [userId, friendId]);
+    const data = await ChatService.createRoomChat(userId, [userId, friendId]);
 
-    return true;
+    return {
+      roomId: data._id.toString(),
+    };
   }
 
   static async declineFriend({ friendId }, keyStore) {
@@ -242,12 +247,17 @@ class FriendService {
     const friend = await CommonService.getUserInfo(friendId);
     if (!friend) throw new BadRequestError("Not found friend");
 
-    const rs = await Friend.findOneAndDelete({
+    const rs = await Friend.findOneAndUpdate({
       $or: [
         { created_by_user: userId, friend_userId: friendId },
         { created_by_user: friendId, friend_userId: userId },
       ],
       friend_status: FRIEND_STATUS.FOLLOW,
+    },
+    {
+      $set:{
+        friend_status: FRIEND_STATUS.UNFRIEND,
+      }
     });
     if (!rs) throw new BadRequestError("Not found friend");
 
