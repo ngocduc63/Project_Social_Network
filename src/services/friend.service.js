@@ -233,12 +233,13 @@ class FriendService {
     );
 
     if (!rs) throw new BadRequestError("Not found friend");
+    const dataRoom = await ChatService.checkRoomExist(friendId, userId);
+    
+    if (!dataRoom) {
+      await ChatService.createRoomChat(userId, [userId, friendId]);
+    }
 
-    const data = await ChatService.createRoomChat(userId, [userId, friendId]);
-
-    return {
-      roomId: data._id.toString(),
-    };
+    return true;
   }
 
   static async declineFriend({ friendId }, keyStore) {
@@ -247,18 +248,20 @@ class FriendService {
     const friend = await CommonService.getUserInfo(friendId);
     if (!friend) throw new BadRequestError("Not found friend");
 
-    const rs = await Friend.findOneAndUpdate({
-      $or: [
-        { created_by_user: userId, friend_userId: friendId },
-        { created_by_user: friendId, friend_userId: userId },
-      ],
-      friend_status: FRIEND_STATUS.FOLLOW,
-    },
-    {
-      $set:{
-        friend_status: FRIEND_STATUS.UNFRIEND,
+    const rs = await Friend.findOneAndUpdate(
+      {
+        $or: [
+          { created_by_user: userId, friend_userId: friendId },
+          { created_by_user: friendId, friend_userId: userId },
+        ],
+        friend_status: FRIEND_STATUS.FOLLOW,
+      },
+      {
+        $set: {
+          friend_status: FRIEND_STATUS.UNFRIEND,
+        },
       }
-    });
+    );
     if (!rs) throw new BadRequestError("Not found friend");
 
     return true;

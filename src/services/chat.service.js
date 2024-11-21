@@ -88,21 +88,38 @@ class ChatService {
     return { rooms: data, totalPage: Math.ceil(roomTotal / limit), roomTotal };
   }
 
+  static async checkRoomExist(friendId, userId) {
+    const room = await roomModel.findOne({
+      room_members: {
+        $all: [
+          convertToObjectIdMongodb(userId),
+          convertToObjectIdMongodb(friendId),
+        ],
+      },
+      $expr: { $eq: [{ $size: "$room_members" }, 2] },
+    });
+    return room;
+  }
+
   static async getRoom({ friendId }, keyStore) {
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
 
     const room = await roomModel.findOne({
-        room_members: { $all: [convertToObjectIdMongodb(userId), convertToObjectIdMongodb(friendId)] }, 
-        $expr: { $eq: [{ $size: "$room_members" }, 2] }
+      room_members: {
+        $all: [
+          convertToObjectIdMongodb(userId),
+          convertToObjectIdMongodb(friendId),
+        ],
+      },
+      $expr: { $eq: [{ $size: "$room_members" }, 2] },
     });
 
     if (!room) {
-        throw new NotFoundError('Room not found');
+      throw new NotFoundError("Room not found");
     }
 
-    return await this.getDataRoom(room, userId); 
-}
-
+    return await this.getDataRoom(room, userId);
+  }
 
   static async getListMessage({ roomId, page = 1, limit = 20, offset = 0 }) {
     const skip = (page - 1) * limit + offset;
