@@ -48,35 +48,86 @@ class FriendService {
         },
       },
       {
-        $group: {
-          _id: null,
-          user1Friends: {
-            $addToSet: {
-              $cond: [
-                { $eq: ["$created_by_user", convertToObjectIdMongodb(userId)] },
-                "$friend_userId",
-                "$created_by_user",
-              ],
+        $facet: {
+          user1Friends: [
+            {
+              $match: {
+                $or: [
+                  { created_by_user: convertToObjectIdMongodb(userId) },
+                  { friend_userId: convertToObjectIdMongodb(userId) },
+                ],
+              },
             },
-          },
-          user2Friends: {
-            $addToSet: {
-              $cond: [
-                {
-                  $eq: ["$created_by_user", convertToObjectIdMongodb(friendId)],
+            {
+              $project: {
+                friend_userId: {
+                  $cond: [
+                    {
+                      $eq: [
+                        "$created_by_user",
+                        convertToObjectIdMongodb(userId),
+                      ],
+                    },
+                    "$friend_userId",
+                    "$created_by_user",
+                  ],
                 },
-                "$friend_userId",
-                "$created_by_user",
-              ],
+              },
             },
-          },
+            {
+              $group: {
+                _id: null,
+                user1Friends: { $addToSet: "$friend_userId" },
+              },
+            },
+          ],
+          user2Friends: [
+            {
+              $match: {
+                $or: [
+                  { created_by_user: convertToObjectIdMongodb(friendId) },
+                  { friend_userId: convertToObjectIdMongodb(friendId) },
+                ],
+              },
+            },
+            {
+              $project: {
+                friend_userId: {
+                  $cond: [
+                    {
+                      $eq: [
+                        "$created_by_user",
+                        convertToObjectIdMongodb(friendId),
+                      ],
+                    },
+                    "$friend_userId",
+                    "$created_by_user",
+                  ],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                user2Friends: { $addToSet: "$friend_userId" },
+              },
+            },
+          ],
         },
       },
       {
         $project: {
           mutualFriends: {
-            $setIntersection: ["$user1Friends", "$user2Friends"],
+            $setIntersection: [
+              { $arrayElemAt: ["$user1Friends.user1Friends", 0] },
+              { $arrayElemAt: ["$user2Friends.user2Friends", 0] },
+            ],
           },
+        },
+      },
+      {
+        $match: {
+          mutualFriends: { $ne: [] }, 
         },
       },
       {
@@ -97,19 +148,30 @@ class FriendService {
                 _id: "$$friend._id",
                 name: "$$friend.name",
                 avatar: "$$friend.avatar",
+                createdAt: "$$friend.createdAt",
               },
             },
           },
         },
       },
-      { $unwind: "$mutualFriendDetails" },
-      { $sort: { "mutualFriendDetails.createdAt": -1 } },
-      { $limit: limit },
+      {
+        $unwind: {
+          path: "$mutualFriendDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $sort: { "mutualFriendDetails.createdAt": -1 },
+      },
+      {
+        $limit: limit,
+      },
     ]);
 
-    const latestMutualFriends = mutualFriends.map(
-      (doc) => doc.mutualFriendDetails
-    );
+    const latestMutualFriends = mutualFriends
+      .map((doc) => doc.mutualFriendDetails)
+      .filter((friend) => friend);
+
     const mutualFriendCount = latestMutualFriends.length;
 
     return { mutualFriendCount, latestMutualFriends };
@@ -234,7 +296,7 @@ class FriendService {
 
     if (!rs) throw new BadRequestError("Not found friend");
     const dataRoom = await ChatService.checkRoomExist(friendId, userId);
-    
+
     if (!dataRoom) {
       await ChatService.createRoomChat(userId, [userId, friendId]);
     }

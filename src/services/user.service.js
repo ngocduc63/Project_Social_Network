@@ -146,10 +146,6 @@ class UserService {
       const { mutualFriendCount, latestMutualFriends } =
         await FriendService.getMutualFriends(userId, friendId);
 
-      userInfo.friends = await FriendService.countFriends(
-        userInfo._id.toString()
-      );
-
       userInfo.mutualFriends = mutualFriendCount;
       userInfo.latestMutualFriends = latestMutualFriends;
 
@@ -160,13 +156,15 @@ class UserService {
 
       userInfo.friendStatus = checkFriend;
     } else {
-      userInfo.friends = await FriendService.countFriends(userId);
       userInfo.listFriend = await FriendService.getListFriend(
         { friendId: userId, limit: 6 },
         keyStore
       );
     }
 
+    userInfo.friends = await FriendService.countFriends(
+      userInfo._id.toString()
+    );
     userInfo.guard = true;
 
     return getInfoData({
