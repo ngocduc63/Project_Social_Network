@@ -7,7 +7,6 @@ const SUB_EVENT_RECEIVE_MESSAGE = "receive_message";
 const SUB_EVENT_RECEIVE_ROOM = "receive_user_room";
 const SUB_EVENT_IS_USER_CONNECTED = "is_user_connected";
 const SUB_EVENT_RECEIVE_NOTIFICATION = "receive_noti";
-const SUB_EVENT_SEND_NOTIFICATION_USER = "notification_for_user";
 const SUB_EVENT_SEND_NOTIFICATION_POST = "notification_for_post";
 const ON_CONNECTION = "connection";
 
@@ -71,10 +70,10 @@ const onMessage = (socket) => {
       io.to(`chat_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_ROOM, rsRoom);
       const dataNotiForUser = {
         data: rsRoom,
-        type: "message"
+        noti_type: "message"
       }
       if(userId.toString() !== sender){
-        io.to(`user_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_NOTIFICATION, dataNotiForUser);
+        handleNotiForUser(dataNotiForUser, userId)
       }
     }
   });
@@ -172,7 +171,7 @@ const handleCall = (socket) => {
 }
 
 const handleNotiForUser = async (data, userId) => {
-  await io.to(userId).emit(SUB_EVENT_SEND_NOTIFICATION_USER, data);
+  await io.to(`user_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_NOTIFICATION, data);
 }
 
 const handleNotiForPost = async (data, postId) => {
