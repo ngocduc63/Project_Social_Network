@@ -38,14 +38,17 @@ class LikeService {
       like_category: category,
     });
 
-    const rsPost = await PostService.updateNumLike(1, postId, likeCategory, postInfo, userId);
+    await PostService.updateNumLike(1, postId, likeCategory, postInfo, userId);
     
+    const receivedId = postInfo.created_by_user.toString();
+    const dataPostNoti = await PostService.getPostInfoById(postId, receivedId);
+
     // notifi
     const notiInfo = {
       type: NOTIFICATION_TYPES.LIKE_POST,
-      receivedId: postInfo.created_by_user.toString(),
+      receivedId: receivedId,
       senderId: userId,
-      options: {post: rsPost, likeCategory}
+      options: {post: dataPostNoti, likeCategory}
     }
 
     NotificationService.pushNotiToSystem(notiInfo);
@@ -83,8 +86,16 @@ class LikeService {
     }
     
 
+    const receivedId = postInfo.created_by_user.toString();
+    const dataPostNoti = await PostService.getPostInfoById(postId, receivedId);
     // notifi
-    // NotificationService.pushNotiToSystem(NOTIFICATION_TYPES.LIKE_POST, userId, postInfo.created_by_user)
+    const notiInfo = {
+      type: NOTIFICATION_TYPES.LIKE_POST,
+      receivedId: receivedId,
+      senderId: userId,
+      options: {post: dataPostNoti, likeCategory}
+    }
+    NotificationService.pushNotiToSystem(notiInfo);
 
     return true;
   }

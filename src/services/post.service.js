@@ -2,7 +2,11 @@
 
 const { BadRequestError } = require("../core/error.response");
 const post = require("../models/post.model");
-const { convertToObjectIdMongodb, encodePathFile, uploadFileToGGDrive } = require("../utils");
+const {
+  convertToObjectIdMongodb,
+  encodePathFile,
+  uploadFileToGGDrive,
+} = require("../utils");
 const { NOTIFICATION_TYPES } = require("../utils/const.notification");
 const {
   POST_STATUS_TYPES,
@@ -18,30 +22,30 @@ const {
 const { handleNotiForPost } = require("../socket_handle");
 
 class PostService {
-  static getQueryNewFeed(userIdMongo) {
+  static async getPostInfoById(postId, userId)  {
+    const userIdMongo = convertToObjectIdMongodb(userId)
+    const match = {
+      _id: convertToObjectIdMongodb(postId),
+    };
+    const postData = await post.aggregate(this.getQueryInfoPost(match, userIdMongo));
+    return postData[0];
+  }
+
+  static getQueryInfoPost(match, userIdMongo) {
     return [
       {
-        $match: {
-          $or: [
-            { post_status: POST_STATUS_TYPES.PUBLIC_POST },
-            {
-              post_status: POST_STATUS_TYPES.PRIVATE_POST,
-              created_by_user: userIdMongo,
-            }, 
-            { post_status: POST_STATUS_TYPES.FRIEND_POST },
-          ],
-        },
+        $match: match,
       },
       {
         $lookup: {
-          from: "Friends", 
-          let: { postAuthorId: "$created_by_user" }, 
+          from: "Friends",
+          let: { postAuthorId: "$created_by_user" },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$friend_status", FRIEND_STATUS.FRIEND] }, 
+                    { $eq: ["$friend_status", FRIEND_STATUS.FRIEND] },
                     {
                       $or: [
                         {
@@ -63,20 +67,20 @@ class PostService {
               },
             },
           ],
-          as: "friendRelation", 
+          as: "friendRelation",
         },
       },
       {
         $addFields: {
-          isFriend: { $gt: [{ $size: "$friendRelation" }, 0] }, 
+          isFriend: { $gt: [{ $size: "$friendRelation" }, 0] },
         },
       },
       {
         $lookup: {
-          from: "Users", 
-          localField: "created_by_user", 
+          from: "Users",
+          localField: "created_by_user",
           foreignField: "_id",
-          as: "user", 
+          as: "user",
         },
       },
       {
@@ -86,15 +90,15 @@ class PostService {
       },
       {
         $lookup: {
-          from: "Likes", 
-          let: { postId: "$_id" }, 
+          from: "Likes",
+          let: { postId: "$_id" },
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$like_postId", "$$postId"] }, 
-                    { $eq: ["$like_userId", userIdMongo] }, 
+                    { $eq: ["$like_postId", "$$postId"] },
+                    { $eq: ["$like_userId", userIdMongo] },
                   ],
                 },
               },
@@ -112,7 +116,7 @@ class PostService {
       {
         $match: {
           $or: [
-            { post_status: POST_STATUS_TYPES.PUBLIC_POST }, 
+            { post_status: POST_STATUS_TYPES.PUBLIC_POST },
             {
               post_status: POST_STATUS_TYPES.PRIVATE_POST,
               created_by_user: userIdMongo,
@@ -122,13 +126,13 @@ class PostService {
                 { post_status: POST_STATUS_TYPES.FRIEND_POST },
                 { created_by_user: userIdMongo },
               ],
-            }, 
+            },
             {
               $and: [
                 { post_status: POST_STATUS_TYPES.FRIEND_POST },
                 { isFriend: true },
               ],
-            }, 
+            },
           ],
         },
       },
@@ -144,8 +148,8 @@ class PostService {
       // },
       {
         $addFields: {
-          layout: "classic"
-        }
+          layout: "classic",
+        },
       },
       {
         $project: {
@@ -173,11 +177,29 @@ class PostService {
     ];
   }
 
-  static async getPostForUser({ page = 1, limit = 20, offset = 0 }, keyStore, query = []) {
+  static getQueryNewFeed(userIdMongo) {
+    const match = {
+      $or: [
+        { post_status: POST_STATUS_TYPES.PUBLIC_POST },
+        {
+          post_status: POST_STATUS_TYPES.PRIVATE_POST,
+          created_by_user: userIdMongo,
+        },
+        { post_status: POST_STATUS_TYPES.FRIEND_POST },
+      ],
+    };
+    return this.getQueryInfoPost(match, userIdMongo);
+  }
+
+  static async getPostForUser(
+    { page = 1, limit = 20, offset = 0 },
+    keyStore,
+    query = []
+  ) {
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
     const userIdMongo = convertToObjectIdMongodb(userId);
 
-    if (query.length <=0 ) query = this.getQueryNewFeed(userIdMongo)
+    if (query.length <= 0) query = this.getQueryNewFeed(userIdMongo);
 
     const posts = await post.aggregate([
       ...query,
@@ -215,13 +237,12 @@ class PostService {
         .filter((file) => allowedImageTypes.includes(file.mimetype))
         .map(async (file) => await uploadFileToGGDrive(file))
     );
-    
+
     data.post_video = await Promise.all(
       files
         .filter((file) => allowedVideoTypes.includes(file.mimetype))
         .map(async (file) => await uploadFileToGGDrive(file))
     );
-    
 
     return await new Post(data).createPost();
   }
@@ -269,8 +290,8 @@ class PostService {
       type: NOTIFICATION_TYPES.SHARE_POST,
       receivedId: postInfo.created_by_user.toString(),
       senderId: userId,
-      options: {'postId': postId}
-    }
+      options: { postId: postId },
+    };
     NotificationService.pushNotiToSystem(notiInfo);
 
     return true;
@@ -311,13 +332,13 @@ class PostService {
         $inc: { post_num_comment: num },
       },
       {
-        returnDocument: 'after'
+        returnDocument: "after",
       }
     );
 
-    await handleNotiForPost(rsPost, postId)
+    await handleNotiForPost(rsPost, postId);
 
-    return rsPost
+    return rsPost;
   }
 
   static async updateNumLike(num, postId, likeCategory, postInfo, userId) {
@@ -367,15 +388,15 @@ class PostService {
         $inc: { post_num_like: num },
       },
       {
-        returnDocument: 'after'
-      },
+        returnDocument: "after",
+      }
     );
 
     resultPost.userId = userId;
     resultPost.likeCategory = likeCategory;
-    await handleNotiForPost(resultPost, postId)
+    await handleNotiForPost(resultPost, postId);
 
-    return resultPost
+    return resultPost;
   }
 
   static async updateReactions(
@@ -444,10 +465,9 @@ class PostService {
     const rsPost = await post.findById(postId).lean();
     rsPost.userId = userId;
     rsPost.likeCategory = likeCategory;
-    await handleNotiForPost(rsPost, postId)
+    await handleNotiForPost(rsPost, postId);
 
     return rsPost;
-
   }
 
   static async updateNumShare(num, postId) {
@@ -459,13 +479,13 @@ class PostService {
         $inc: { post_num_share: num },
       },
       {
-        returnDocument: 'after'
+        returnDocument: "after",
       }
     );
 
-    await handleNotiForPost(rsPost, postId)
+    await handleNotiForPost(rsPost, postId);
 
-    return rsPost
+    return rsPost;
   }
 }
 

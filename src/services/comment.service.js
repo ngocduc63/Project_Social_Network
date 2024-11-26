@@ -66,21 +66,24 @@ class CommemtService {
 
     comment.comment_left = rightValue;
     comment.comment_right = rightValue + 1;
-
     await comment.save();
 
     // icrease num comment in post:
     await PostService.updateNumComment(1, postId);
 
+
+    const receivedId = postInfo.created_by_user.toString();
+    const dataPostNoti = await PostService.getPostInfoById(postId, receivedId);
     // notifi
     const notiInfo = {
       type: NOTIFICATION_TYPES.COMMENT_POST,
-      receivedId: postInfo.created_by_user.toString(),
+      receivedId: receivedId,
       senderId: userId,
-      options: {'postId': postId}
+      options: {post: dataPostNoti,}
     }
     NotificationService.pushNotiToSystem(notiInfo);
 
+    // get data cmt
     const dataRes = comment.toJSON();
     const userInfo = await CommonService.getUserInfo(userId);
     dataRes.user = userInfo;
