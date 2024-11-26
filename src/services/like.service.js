@@ -51,7 +51,6 @@ class LikeService {
       NotificationService.pushNotiToSystem(notiInfo);
     }
 
-    NotificationService.pushNotiToSystem(notiInfo);
 
     return true;
   }
@@ -93,6 +92,7 @@ class LikeService {
         senderId: userId,
         options: { postId, likeCategory },
       };
+
       NotificationService.pushNotiToSystem(notiInfo);
     }
 
