@@ -16,7 +16,8 @@ class NotificationService {
     let noti_content;
 
     if (type === NOTIFICATION_TYPES.CREATE_POST) {
-      noti_content = "vua tao bai viet";
+      // noti_content = "vua tao bai viet";
+      return;
     } else if (type === NOTIFICATION_TYPES.LIKE_POST) {
       noti_content = "vua like bai viet cua ban";
     } else if (type === NOTIFICATION_TYPES.COMMENT_POST){
@@ -49,18 +50,34 @@ class NotificationService {
   }
 
   static async listNotiByUser({
-    userId,
     type = NOTIFICATION_TYPES.GET_ALL,
-    isRead = 0,
-  }) {
+    page = 1,
+    limit = 10,
+  }, keyStore) {
+    const userId = await CommonService.getUserIdByKeyStore(keyStore)
     const match = { noti_receivedId: convertToObjectIdMongodb(userId) };
     if (type !== NOTIFICATION_TYPES.GET_ALL) {
       match["noti_type"] = type;
     }
-
-    return await NotiModel.aggregate([
+    
+    const skip = (page - 1) * limit;
+    const data = await NotiModel.aggregate([
       {
         $match: match,
+      },
+      {
+        $lookup: {
+          from: "Users",
+          localField: "noti_senderId",
+          foreignField: "_id",
+          as: "noti_sender",
+        },
+      },
+      {
+        $unwind: {
+          path: "$noti_sender",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $project: {
@@ -69,9 +86,41 @@ class NotificationService {
           noti_receivedId: 1,
           noti_content: 1,
           createdAt: 1,
+          noti_sender: {
+            _id: "$noti_sender._id",
+            avatar: "$noti_sender.avatar",
+            name: "$noti_sender.name",
+          },
+          noti_options: 1,
         },
       },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
     ]);
+    
+    const count = await NotiModel.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $count: "totalCount",
+      },
+    ]);
+    const totalNoti = count[0].totalCount
+
+    return {
+      noti: data,
+      page: page,
+      total: totalNoti,
+      totalPage: Math.ceil(totalNoti / limit)
+    }
   }
 }
 

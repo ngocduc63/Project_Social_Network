@@ -45,7 +45,7 @@ class LikeService {
       type: NOTIFICATION_TYPES.LIKE_POST,
       receivedId: postInfo.created_by_user.toString(),
       senderId: userId,
-      options: {post: rsPost}
+      options: {post: rsPost, likeCategory}
     }
 
     NotificationService.pushNotiToSystem(notiInfo);

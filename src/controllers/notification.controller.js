@@ -5,7 +5,7 @@ const NotificationService = require("../services/notification.service");
 
 class NotificationController {
   getListNotiByUser = async (req, res, next) => {
-    const metadata = await NotificationService.listNotiByUser(req.body);
+    const metadata = await NotificationService.listNotiByUser(req.body, req.keyStore);
     new SuccessResponse(metadata).send(res);
   };
 }

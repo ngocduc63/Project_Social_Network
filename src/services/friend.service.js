@@ -6,6 +6,8 @@ const { FRIEND_STATUS } = require("../utils/const.user");
 const CommonService = require("./common.service");
 const { convertToObjectIdMongodb } = require("../utils");
 const ChatService = require("./chat.service");
+const NotificationService = require("./notification.service");
+const { NOTIFICATION_TYPES } = require("../utils/const.notification");
 
 class FriendService {
   static async getDataFriends(friends, userId) {
@@ -127,7 +129,7 @@ class FriendService {
       },
       {
         $match: {
-          mutualFriends: { $ne: [] }, 
+          mutualFriends: { $ne: [] },
         },
       },
       {
@@ -270,6 +272,12 @@ class FriendService {
       }
 
       if (!rs) throw new BadRequestError("error add friend");
+      
+      await NotificationService.pushNotiToSystem({
+        type: NOTIFICATION_TYPES.ADD_FRIEND,
+        receivedId: friendId,
+        senderId: userId,
+      });
 
       return true;
     }
@@ -280,6 +288,11 @@ class FriendService {
     });
     if (!rs) throw new BadRequestError("error add friend");
 
+    await NotificationService.pushNotiToSystem({
+      type: NOTIFICATION_TYPES.ADD_FRIEND,
+      receivedId: friendId,
+      senderId: userId,
+    });
     return true;
   }
 
@@ -300,6 +313,12 @@ class FriendService {
     if (!dataRoom) {
       await ChatService.createRoomChat(userId, [userId, friendId]);
     }
+
+    await NotificationService.pushNotiToSystem({
+      type: NOTIFICATION_TYPES.ACCEPT_FRIEND,
+      receivedId: friendId,
+      senderId: userId,
+    });
 
     return true;
   }
