@@ -41,12 +41,14 @@ class LikeService {
     await PostService.updateNumLike(1, postId, likeCategory, postInfo, userId);
     
     const receivedId = postInfo.created_by_user.toString();
-    // notifi
-    const notiInfo = {
-      type: NOTIFICATION_TYPES.LIKE_POST,
-      receivedId: receivedId,
-      senderId: userId,
-      options: {postId, likeCategory}
+    if (userId !== receivedId) {
+      const notiInfo = {
+        type: NOTIFICATION_TYPES.LIKE_POST,
+        receivedId: receivedId,
+        senderId: userId,
+        options: { postId, likeCategory },
+      };
+      NotificationService.pushNotiToSystem(notiInfo);
     }
 
     NotificationService.pushNotiToSystem(notiInfo);
@@ -84,14 +86,15 @@ class LikeService {
     }
 
     const receivedId = postInfo.created_by_user.toString();
-    // notifi
-    const notiInfo = {
-      type: NOTIFICATION_TYPES.LIKE_POST,
-      receivedId: receivedId,
-      senderId: userId,
-      options: {postId, likeCategory}
+    if (userId !== receivedId) {
+      const notiInfo = {
+        type: NOTIFICATION_TYPES.LIKE_POST,
+        receivedId: receivedId,
+        senderId: userId,
+        options: { postId, likeCategory },
+      };
+      NotificationService.pushNotiToSystem(notiInfo);
     }
-    NotificationService.pushNotiToSystem(notiInfo);
 
     return true;
   }

@@ -73,31 +73,36 @@ class CommemtService {
 
     // notifi
     const receivedId = postInfo.created_by_user.toString();
-    const notiInfo = {
-      type: NOTIFICATION_TYPES.COMMENT_POST,
-      receivedId: receivedId,
-      senderId: userId,
-      options: {postId}
+    if (userId !== receivedId) {
+      const notiInfo = {
+        type: NOTIFICATION_TYPES.COMMENT_POST,
+        receivedId: receivedId,
+        senderId: userId,
+        options: { postId },
+      };
+      NotificationService.pushNotiToSystem(notiInfo);
     }
-    NotificationService.pushNotiToSystem(notiInfo);
 
     // get data cmt
     const dataRes = comment.toJSON();
     const userInfo = await CommonService.getUserInfo(userId);
     dataRes.user = userInfo;
-    dataRes.content = comment.comment_content
-    dataRes.postId = comment.comment_postId
-    dataRes.postId = comment.comment_postId
-    dataRes.countChildComment = 0
-    
-    return getInfoData({fileds: [
-      '_id',
-      'user',
-      'content',
-      'postId',
-      'createdAt',
-      'countChildComment'
-    ], object: dataRes} );
+    dataRes.content = comment.comment_content;
+    dataRes.postId = comment.comment_postId;
+    dataRes.postId = comment.comment_postId;
+    dataRes.countChildComment = 0;
+
+    return getInfoData({
+      fileds: [
+        "_id",
+        "user",
+        "content",
+        "postId",
+        "createdAt",
+        "countChildComment",
+      ],
+      object: dataRes,
+    });
   }
 
   static async findCommentByParentId(
@@ -136,7 +141,7 @@ class CommemtService {
       .skip((page - 1) * limit)
       .limit(limit);
 
-    return {comments, totalComments};
+    return { comments, totalComments };
   }
 
   static async findCommentByPostId(postId, page, limit) {
@@ -165,7 +170,7 @@ class CommemtService {
       .skip((page - 1) * limit)
       .limit(limit);
 
-    return {comments, totalComments};
+    return { comments, totalComments };
   }
 
   static async commentCountForParentId(postId, parentCommentId, parent) {
@@ -223,7 +228,12 @@ class CommemtService {
       );
 
       const data = await this.getDataComments(postId, comments);
-      return { comments: data, page, totalPage: Math.ceil(totalComments / limit), totalComments };
+      return {
+        comments: data,
+        page,
+        totalPage: Math.ceil(totalComments / limit),
+        totalComments,
+      };
     } else {
       const { comments, totalComments } = await this.findCommentByPostId(
         postId,
@@ -232,7 +242,12 @@ class CommemtService {
       );
 
       const data = await this.getDataComments(postId, comments);
-      return { comments: data, page, totalPage: Math.ceil(totalComments / limit), totalComments };
+      return {
+        comments: data,
+        page,
+        totalPage: Math.ceil(totalComments / limit),
+        totalComments,
+      };
     }
   }
 
