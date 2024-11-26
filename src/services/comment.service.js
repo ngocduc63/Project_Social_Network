@@ -71,15 +71,13 @@ class CommemtService {
     // icrease num comment in post:
     await PostService.updateNumComment(1, postId);
 
-
-    const receivedId = postInfo.created_by_user.toString();
-    const dataPostNoti = await PostService.getPostInfoById(postId, receivedId);
     // notifi
+    const receivedId = postInfo.created_by_user.toString();
     const notiInfo = {
       type: NOTIFICATION_TYPES.COMMENT_POST,
       receivedId: receivedId,
       senderId: userId,
-      options: {post: dataPostNoti,}
+      options: {postId}
     }
     NotificationService.pushNotiToSystem(notiInfo);
 

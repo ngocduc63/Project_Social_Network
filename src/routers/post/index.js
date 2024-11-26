@@ -20,6 +20,7 @@ router.use(permission('0000'))
 router.use(authentication)
 
 router.get('/posts-for-user', asyncHandler(postController.getPostForUser))
+router.get('/post-single', asyncHandler(postController.getSinglePost))
 router.get('/list-comments-by-parent-id', asyncHandler(commentController.getCommentsByParentId))
 router.get('/list-likes', asyncHandler(likeController.getListLike))
 

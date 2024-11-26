@@ -22,12 +22,15 @@ const {
 const { handleNotiForPost } = require("../socket_handle");
 
 class PostService {
-  static async getPostInfoById(postId, userId)  {
-    const userIdMongo = convertToObjectIdMongodb(userId)
+  static async getPostInfoById({ postId }, keyStore) {
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+    const userIdMongo = convertToObjectIdMongodb(userId);
     const match = {
       _id: convertToObjectIdMongodb(postId),
     };
-    const postData = await post.aggregate(this.getQueryInfoPost(match, userIdMongo));
+    const postData = await post.aggregate(
+      this.getQueryInfoPost(match, userIdMongo)
+    );
     return postData[0];
   }
 

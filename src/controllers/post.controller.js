@@ -9,6 +9,11 @@ class PostController {
     new SuccessResponse(metadata).send(res);
   }
 
+  getSinglePost = async (req, res, next) => { 
+    const metadata = await PostService.getPostInfoById(req.body, req.keyStore);
+    new SuccessResponse(metadata).send(res);
+  }
+
   createPost = async (req, res, next) => {
     const metadata = await PostService.createPost(req.body, req.keyStore, req.files);
     new SuccessResponse(metadata, "Create post success").send(res);
