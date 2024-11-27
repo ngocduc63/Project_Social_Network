@@ -141,8 +141,6 @@ class StoryService {
       },
     ];
   }
-  
-  
 
   static async createStory(body, keyStore, files) {
     const data = JSON.parse(body.data);
@@ -195,7 +193,7 @@ class StoryService {
     const storys = await storyModel.aggregate([
       ...query,
       {
-        $sort: { 'lastStory.createdAt': -1 },
+        $sort: { "lastStory.createdAt": -1 },
       },
       {
         $skip: (page - 1) * limit,
