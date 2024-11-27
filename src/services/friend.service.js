@@ -302,6 +302,14 @@ class FriendService {
     const friend = await CommonService.getUserInfo(friendId);
     if (!friend) throw new BadRequestError("Not found friend");
 
+    const checkExistFriend = await this.checkFriendExits(userId, friendId);
+    if (
+      checkExistFriend &&
+      checkExistFriend.friend_status === FRIEND_STATUS.FRIEND
+    ){
+      throw new BadRequestError("is friend");
+    }
+
     const rs = await Friend.findOneAndUpdate(
       { created_by_user: friendId, friend_userId: userId },
       { $set: { friend_status: FRIEND_STATUS.FRIEND } }
