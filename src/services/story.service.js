@@ -13,7 +13,7 @@ const storyModel = require("../models/story.model");
 const { FRIEND_STATUS } = require("../utils/const.user");
 
 class StoryService {
-  static getQueryInfStory(match, userIdMongo) {
+  static getQueryStory(match, userIdMongo) {
     return [
       {
         $match: match,
@@ -58,32 +58,6 @@ class StoryService {
         },
       },
       {
-        $lookup: {
-          from: "Users",
-          localField: "created_by_user",
-          foreignField: "_id",
-          as: "user",
-        },
-      },
-      {
-        $addFields: {
-          user: { $arrayElemAt: ["$user", 0] },
-        },
-      },
-      {
-        $addFields: {
-          is_video: {
-            $cond: {
-              if: {
-                $eq: ["$story_video", ""],
-              },
-              then: false,
-              else: true,
-            },
-          },
-        },
-      },
-      {
         $match: {
           $or: [
             { story_status: POST_STATUS_TYPES.PUBLIC_POST },
@@ -107,24 +81,68 @@ class StoryService {
         },
       },
       {
+        $group: {
+          _id: "$created_by_user",
+          listStory: { $push: "$$ROOT" },
+          lastStory: { $last: "$$ROOT" },
+        },
+      },
+      {
+        $addFields: {
+          listStory: {
+            $sortArray: { input: "$listStory", sortBy: { createdAt: -1 } },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "Users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      {
+        $addFields: {
+          user: { $arrayElemAt: ["$user", 0] },
+        },
+      },
+      {
         $project: {
-          _id: 1,
-          story_title: 1,
-          created_by_user: 1,
-          story_image: 1,
-          story_video: 1,
-          "user._id": 1,
-          "user.name": 1,
-          "user.avatar": 1,
-          isFriend: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          story_status: 1,
-          is_video: 1,
+          _id: 1, // user ID
+          "user._id": 1, // user ID
+          "user.name": 1, // user name
+          "user.avatar": 1, // user avatar
+          listStory: {
+            _id: 1,
+            story_title: 1,
+            story_image: 1,
+            story_video: 1,
+            story_status: 1,
+            createdAt: 1,
+            isFriend: 1,
+            "user._id": 1,
+            "user.name": 1,
+            "user.avatar": 1,
+          },
+          lastStory: {
+            _id: 1,
+            story_title: 1,
+            story_image: 1,
+            story_video: 1,
+            story_status: 1,
+            createdAt: 1,
+            "user._id": 1,
+            "user.name": 1,
+            "user.avatar": 1,
+            isFriend: 1,
+          },
         },
       },
     ];
   }
+  
+  
 
   static async createStory(body, keyStore, files) {
     const data = JSON.parse(body.data);
@@ -172,12 +190,12 @@ class StoryService {
       ],
     };
 
-    const query = this.getQueryInfStory(match, userIdMongo);
+    const query = this.getQueryStory(match, userIdMongo);
 
     const storys = await storyModel.aggregate([
       ...query,
       {
-        $sort: { createdAt: -1 },
+        $sort: { 'lastStory.createdAt': -1 },
       },
       {
         $skip: (page - 1) * limit,
