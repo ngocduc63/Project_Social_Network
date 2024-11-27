@@ -71,6 +71,19 @@ class StoryService {
         },
       },
       {
+        $addFields: {
+          is_video: {
+            $cond: {
+              if: {
+                $eq: ["$story_video", ""],
+              },
+              then: false,
+              else: true,
+            },
+          },
+        },
+      },
+      {
         $match: {
           $or: [
             { story_status: POST_STATUS_TYPES.PUBLIC_POST },
@@ -96,7 +109,7 @@ class StoryService {
       {
         $project: {
           _id: 1,
-          post_title: 1,
+          story_title: 1,
           created_by_user: 1,
           story_image: 1,
           story_video: 1,
@@ -107,6 +120,7 @@ class StoryService {
           createdAt: 1,
           updatedAt: 1,
           story_status: 1,
+          is_video: 1,
         },
       },
     ];
@@ -137,7 +151,7 @@ class StoryService {
     return rs;
   }
 
-  static async getListStory({page = 1, limit = 10, offset = 0}, keyStore) {
+  static async getListStory({ page = 1, limit = 10, offset = 0 }, keyStore) {
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
     const userIdMongo = convertToObjectIdMongodb(userId);
     const match = {
@@ -157,8 +171,8 @@ class StoryService {
         },
       ],
     };
-    
-    const query =  this.getQueryInfStory(match, userIdMongo);
+
+    const query = this.getQueryInfStory(match, userIdMongo);
 
     const storys = await storyModel.aggregate([
       ...query,
