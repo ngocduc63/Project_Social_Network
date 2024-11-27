@@ -9,6 +9,7 @@ router.use('/api/friend',require('./friend'))
 router.use('/api/post',require('./post'))
 router.use('/api/chat',require('./chat'))
 router.use('/api/notification',require('./notification'))
+router.use('/api/story',require('./story'))
 
 
 module.exports = router
