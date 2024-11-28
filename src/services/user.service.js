@@ -260,7 +260,7 @@ class UserService {
 
     return {
       user: getInfoData({
-        fileds: ["_id", "name", "cover"],
+        fileds: ["_id", "name", "cover", "avatar"],
         object: userResult,
       }),
       post: getInfoData({
