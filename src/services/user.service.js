@@ -289,11 +289,31 @@ class UserService {
     return await getFileGGDriveById(filename);
   };
 
-  static updateProfile = async (body) => {
-    return true;
+  static updateProfile = async ({ name, hometown, address, bio }, keyStore) => {
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+
+    const rs = await userModel.findOneAndUpdate(
+      { _id: convertToObjectIdMongodb(userId) },
+      {
+        $set: {
+          name: name,
+          hometown: hometown,
+          address: address,
+          bio: bio,
+        },
+      },
+      {
+        returnDocument: "after",
+      }
+    );
+
+    return getInfoData({
+      fileds: ["_id", "name", "cover", "avatar", 'hometown', 'address', 'bio'],
+      object: rs,
+    });
   };
 
-  static changePassword = async (body) => {
+  static changePassword = async ({ newPassword, lastPassWord }, keyStore) => {
     return true;
   };
 }

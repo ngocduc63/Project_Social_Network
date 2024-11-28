@@ -29,6 +29,11 @@ class UserController {
     const metadata = await userService.updateCoverService(req.file, req.keyStore)
     new SuccessResponse(metadata).send(res);
   };
+
+  updateProfile = async (req, res, next) => {
+    const metadata = await userService.updateProfile(req.body, req.keyStore)
+    new SuccessResponse(metadata).send(res);
+  }
   
   getImageUrl = async (req, res, next) => {
     const fileResponse = await userService.getFileClound(req.params);
