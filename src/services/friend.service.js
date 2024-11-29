@@ -20,6 +20,7 @@ class FriendService {
       else friendInfo = await CommonService.getUserInfo(friend.created_by_user);
 
       friendInfo.createdAt = friend.createdAt;
+      friendInfo.countMutual = await this.countMutualFriend(userId, friendInfo._id.toString());
 
       metadata.push(friendInfo);
     }
