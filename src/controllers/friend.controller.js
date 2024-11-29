@@ -11,6 +11,11 @@ class FriendConstroller {
     new SuccessResponse(metadata).send(res);
   }
 
+  getListFollower = async(req, res, nex) => {
+    const metadata = await FriendService.getListFollower(req.body)
+    new SuccessResponse(metadata).send(res);
+  }
+
   addFriend = async (req, res, next) => { 
     const metadata = await FriendService.createFriend(req.body, req.keyStore)
     new SuccessResponse(metadata, "Add friend success").send(res);

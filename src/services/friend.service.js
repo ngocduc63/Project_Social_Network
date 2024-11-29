@@ -36,6 +36,116 @@ class FriendService {
     return numFriends;
   }
 
+  static async countMutualFriend(userId, friendId) {
+    const mutualFriendsCount = await Friend.aggregate([
+      {
+        $match: {
+          friend_status: FRIEND_STATUS.FRIEND,
+          $or: [
+            { created_by_user: convertToObjectIdMongodb(userId) },
+            { friend_userId: convertToObjectIdMongodb(userId) },
+            { created_by_user: convertToObjectIdMongodb(friendId) },
+            { friend_userId: convertToObjectIdMongodb(friendId) },
+          ],
+        },
+      },
+      {
+        $facet: {
+          user1Friends: [
+            {
+              $match: {
+                $or: [
+                  { created_by_user: convertToObjectIdMongodb(userId) },
+                  { friend_userId: convertToObjectIdMongodb(userId) },
+                ],
+              },
+            },
+            {
+              $project: {
+                friend_userId: {
+                  $cond: [
+                    {
+                      $eq: [
+                        "$created_by_user",
+                        convertToObjectIdMongodb(userId),
+                      ],
+                    },
+                    "$friend_userId",
+                    "$created_by_user",
+                  ],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                user1Friends: { $addToSet: "$friend_userId" },
+              },
+            },
+          ],
+          user2Friends: [
+            {
+              $match: {
+                $or: [
+                  { created_by_user: convertToObjectIdMongodb(friendId) },
+                  { friend_userId: convertToObjectIdMongodb(friendId) },
+                ],
+              },
+            },
+            {
+              $project: {
+                friend_userId: {
+                  $cond: [
+                    {
+                      $eq: [
+                        "$created_by_user",
+                        convertToObjectIdMongodb(friendId),
+                      ],
+                    },
+                    "$friend_userId",
+                    "$created_by_user",
+                  ],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                user2Friends: { $addToSet: "$friend_userId" },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $project: {
+          mutualFriends: {
+            $setIntersection: [
+              { $arrayElemAt: ["$user1Friends.user1Friends", 0] },
+              { $arrayElemAt: ["$user2Friends.user2Friends", 0] },
+            ],
+          },
+        },
+      },
+      {
+        $match: {
+          mutualFriends: { $ne: [] },
+        },
+      },
+      {
+        $project: {
+          mutualFriendsCount: { $size: "$mutualFriends" },
+        },
+      },
+    ]);
+
+    const count =
+      mutualFriendsCount.length > 0
+        ? mutualFriendsCount[0].mutualFriendsCount
+        : 0;
+    return count;
+  }
+
   static async getMutualFriends(userId, friendId, limit = 6) {
     const mutualFriends = await Friend.aggregate([
       {
@@ -174,7 +284,7 @@ class FriendService {
       .map((doc) => doc.mutualFriendDetails)
       .filter((friend) => friend);
 
-    const mutualFriendCount = latestMutualFriends.length;
+    const mutualFriendCount = await this.countMutualFriend(userId, friendId);
 
     return { mutualFriendCount, latestMutualFriends };
   }
@@ -211,6 +321,47 @@ class FriendService {
       page: page,
       totalFriend: total,
       totalPage: Math.ceil(total / limit),
+      page: page,
+    };
+  }
+
+  static async getListFollower({ userId, page = 1, limit = 20, ofset = 0 }) {
+    const skip = (page - 1) * limit;
+
+    const friends = await Friend.find({
+      friend_userId: userId,
+      friend_status: FRIEND_STATUS.FOLLOW,
+    })
+      .populate({
+        path: "created_by_user",
+        select: "name avatar",
+      })
+      .skip(skip)
+      .limit(limit);
+
+    const count = await Friend.countDocuments({
+      friend_userId: userId,
+      friend_status: FRIEND_STATUS.FOLLOW,
+    });
+
+    const rs = [];
+    for (let friend of friends) {
+      const friendId = friend.created_by_user._id.toString();
+      const countMutual = await this.countMutualFriend(userId, friendId);
+      rs.push({
+        '_id': friend._id,
+        'created_by_user': friend.created_by_user,
+        'friend_userId': friend.friend_userId,
+        'createdAt': friend.createdAt,
+        'countMutual': countMutual,
+      })
+    }
+
+    return {
+      friends: rs,
+      page: page,
+      totalFriend: count,
+      totalPage: Math.ceil(count / limit),
       page: page,
     };
   }
@@ -272,7 +423,7 @@ class FriendService {
       }
 
       if (!rs) throw new BadRequestError("error add friend");
-      
+
       await NotificationService.pushNotiToSystem({
         type: NOTIFICATION_TYPES.ADD_FRIEND,
         receivedId: friendId,
@@ -306,7 +457,7 @@ class FriendService {
     if (
       checkExistFriend &&
       checkExistFriend.friend_status === FRIEND_STATUS.FRIEND
-    ){
+    ) {
       throw new BadRequestError("is friend");
     }
 

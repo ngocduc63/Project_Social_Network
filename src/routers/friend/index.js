@@ -16,6 +16,7 @@ router.use(permission('0000'))
 router.use(authentication)
 
 router.get('/list-friend', asyncHandler(friendController.getListFriend))
+router.get('/list-follow', asyncHandler(friendController.getListFollower))
 router.post('/add-friend', asyncHandler(friendController.addFriend))
 router.put('/accept-friend', asyncHandler(friendController.acceptFriend))
 router.put('/unfriend', asyncHandler(friendController.unfriend))
