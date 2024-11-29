@@ -123,6 +123,11 @@ class AccessService {
   };
 
   static signUp = async ({ name, email, password, gender = GENDER_USER.MALE }) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      throw new BadRequestError("Error: Email not match!");
+    }
+
     const holedUser = await userModel.findOne({ email }).lean();
 
     if (holedUser) throw new BadRequestError("Error: Shop already registered!");
