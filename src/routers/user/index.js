@@ -23,6 +23,7 @@ router.use(authentication)
 router.get('/get-token-stringee', asyncHandler(userController.getTokenStringee))
 router.get('/get-user-info', asyncHandler(userController.getUserInfo))
 router.get('/get-post-of-user', asyncHandler(userController.getPostOfUser))
+router,get('/search-user', asyncHandler(userController.searchUser))
 
 router.put('/update-profile', asyncHandler(userController.updateProfile))
 router.put('/update-avatar', upload.single('avatar'), asyncHandler(userController.updateAvatar))

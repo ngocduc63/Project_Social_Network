@@ -10,6 +10,11 @@ class UserController {
     new SuccessResponse(metadata).send(res);
   }
 
+  searchUser = async (req, res, next) => { 
+    const metadata = await userService.searchUser(req.body, req.keyStore);
+    new SuccessResponse(metadata).send(res);
+  }
+
   getTokenStringee = async (req, res, next) => { 
     const metadata = await getAccessTokenStringee(req.keyStore);
     new SuccessResponse(metadata).send(res);

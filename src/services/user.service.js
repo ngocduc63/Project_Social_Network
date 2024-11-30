@@ -308,9 +308,38 @@ class UserService {
     );
 
     return getInfoData({
-      fileds: ["_id", "name", "cover", "avatar", 'hometown', 'address', 'bio'],
+      fileds: ["_id", "name", "cover", "avatar", "hometown", "address", "bio"],
       object: rs,
     });
+  };
+
+  static searchUser = async (
+    { name, page = 1, limit = 10, offset = 0 },
+    keyStore
+  ) => {
+    const skip = (page - 1) * limit;
+    const userId = CommonService.getUserIdByKeyStore(keyStore);
+    const users = await userModel
+      .find({
+        name: { $regex: new RegExp(name, "i") }, // 'i' là tùy chọn không phân biệt chữ hoa chữ thường
+        _id: { $ne: userId },
+      })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalUsers = await userModel.countDocuments({
+      name: { $regex: new RegExp(name, "i") }, // 'i' là tùy chọn không phân biệt chữ hoa chữ thường
+      _id: { $ne: userId },
+    });
+    const data = await FriendService.getDataFriends(users, userId);
+
+    return {
+      users: data,
+      page: page,
+      totatPage: Math.ceil(totalUsers / limit),
+      totalUsers: totalUsers,
+    };
   };
 
   static changePassword = async ({ newPassword, lastPassWord }, keyStore) => {
