@@ -20,7 +20,8 @@ class FriendService {
       else friendInfo = await CommonService.getUserInfo(friend.created_by_user);
 
       friendInfo.createdAt = friend.createdAt;
-      friendInfo.countMutual = await this.countMutualFriend(userId, friendInfo._id.toString());
+      const friendId = friendInfo._id.toString();
+      friendInfo.countMutual = await this.countMutualFriend(userId, friendId);
 
       metadata.push(friendInfo);
     }
@@ -122,9 +123,9 @@ class FriendService {
         $project: {
           mutualFriends: {
             $setIntersection: [
-              { $arrayElemAt: ["$user1Friends.user1Friends", 0] },
-              { $arrayElemAt: ["$user2Friends.user2Friends", 0] },
-            ],
+              { $ifNull: [{ $arrayElemAt: ["$user1Friends.user1Friends", 0] }, []] },
+              { $ifNull: [{ $arrayElemAt: ["$user2Friends.user2Friends", 0] }, []] }
+            ]
           },
         },
       },

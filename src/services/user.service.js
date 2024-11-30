@@ -318,11 +318,11 @@ class UserService {
     keyStore
   ) => {
     const skip = (page - 1) * limit;
-    const userId = CommonService.getUserIdByKeyStore(keyStore);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
     const users = await userModel
       .find({
         name: { $regex: new RegExp(name, "i") }, // 'i' là tùy chọn không phân biệt chữ hoa chữ thường
-        _id: { $ne: userId },
+        _id: { $ne: convertToObjectIdMongodb(userId) },
       })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -330,14 +330,25 @@ class UserService {
 
     const totalUsers = await userModel.countDocuments({
       name: { $regex: new RegExp(name, "i") }, // 'i' là tùy chọn không phân biệt chữ hoa chữ thường
-      _id: { $ne: userId },
+      _id: { $ne: convertToObjectIdMongodb(userId) },
     });
-    const data = await FriendService.getDataFriends(users, userId);
+
+    const rs = [];
+    for (let user of users) {
+      const friendId = user._id.toString();
+      const countMutual = await FriendService.countMutualFriend(userId, friendId);
+      rs.push({
+        '_id': user._id,
+        'avatar': user.avatar,
+        'name': user.name,
+        'countMutual': countMutual,
+      })
+    }
 
     return {
-      users: data,
+      users: rs,
       page: page,
-      totatPage: Math.ceil(totalUsers / limit),
+      totalPage: Math.ceil(totalUsers / limit),
       totalUsers: totalUsers,
     };
   };
