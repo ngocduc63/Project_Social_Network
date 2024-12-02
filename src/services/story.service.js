@@ -159,7 +159,7 @@ class StoryService {
 
     const rs = await storyModel.create({
       story_title: data.story_title,
-      story_status: data.story_status ? POST_STATUS_TYPES.PUBLIC_POST : data.story_status,
+      story_status: data.story_status ? data.story_status : POST_STATUS_TYPES.PUBLIC_POST,
       created_by_user: convertToObjectIdMongodb(userId),
       story_image: data.story_image[0],
       story_video: data.story_video[0],
