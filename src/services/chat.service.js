@@ -15,6 +15,13 @@ class ChatService {
     return data;
   }
 
+  static async createGroupChat({members, roomName = ""}, keyStore){
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+    const data = await this.createRoomChat(userId, members, roomName);
+
+    return data;
+  }
+
   static async getDataMess(dataMess, senderId) {
     const userInfo = await CommonService.getUserInfo(senderId);
 

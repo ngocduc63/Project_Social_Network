@@ -15,6 +15,7 @@ router.use(permission('0000'))
 // check access token
 router.use(authentication)
 
+router.post('/create-group', asyncHandler(chatController.createGroupChat))
 router.get('/list-room', asyncHandler(chatController.getListRoom))
 router.get('/get-room', asyncHandler(chatController.getRoom))
 router.get('/list-mess', asyncHandler(chatController.getListMess))
