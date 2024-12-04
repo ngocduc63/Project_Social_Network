@@ -41,13 +41,13 @@ const addUserToMap = (userId, socketId) => {
 const notiUserOnline = () => {
   const userOnline = listUserOnline();
   for (const userId of userOnline) {
-    io.to(`user_${userId.toString()}`).emit('user_online', userOnline);
+    io.to(`user_${userId.toString()}`).emit("user_online", userOnline);
   }
-}
+};
 
 const listUserOnline = () => {
-  return [...userMap.keys()]
-}
+  return [...userMap.keys()];
+};
 
 const removeUserWithSocketIdFromMap = (socketId) => {
   for (const [userId, id] of userMap.entries()) {
@@ -74,19 +74,23 @@ const checkOnline = (socket) => {
 const onMessage = (socket) => {
   socket.on(EVENT_SINGLE_CHAT_MESSAGE, async (chatMessage) => {
     const { roomId, content, sender, type } = chatMessage;
-    const {rsMess, rsRoom} = await ChatService.createMessage(roomId, sender, content);
+    const { rsMess, rsRoom } = await ChatService.createMessage(
+      roomId,
+      sender,
+      content
+    );
     // noti for room
     io.to(roomId).emit(SUB_EVENT_RECEIVE_MESSAGE, rsMess);
 
     // noti for user
-    for (const userId of rsRoom.room_members){
+    for (const userId of rsRoom.room_members) {
       io.to(`chat_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_ROOM, rsRoom);
       const dataNotiForUser = {
         data: rsRoom,
-        noti_type: "message"
-      }
-      if(userId.toString() !== sender){
-        handleNotiForUser(dataNotiForUser, userId)
+        noti_type: "message",
+      };
+      if (userId.toString() !== sender) {
+        handleNotiForUser(dataNotiForUser, userId);
       }
     }
   });
@@ -116,31 +120,34 @@ const handleRoom = (socket) => {
   socket.on("join_chat_list_room", (data) => {
     const { userId } = data;
     socket.join(`chat_${userId}`);
-  })
+  });
 
   socket.on("leave_chat_list_room", (data) => {
     const { userId } = data;
     if (socket.rooms.has(`chat_${userId}`)) {
       socket.leave(`chat_${userId}`);
     }
-  })
+  });
 
   // handle noti for user
   socket.on("join_noti_for_user", (data) => {
     const { userId } = data;
     socket.join(`user_${userId}`);
-  })
+    
+    const userOnline = listUserOnline();
+    io.to(`user_${userId}`).emit("user_online", userOnline);
+  });
 
   socket.on("leave_noti_for_user", (data) => {
     const { userId } = data;
     if (socket.rooms.has(`user_${userId}`)) {
       socket.leave(`user_${userId}`);
     }
-  })
-}
+  });
+};
 
 const handleCall = (socket) => {
-  // room message 
+  // room message
   socket.on("makeCall", async (data) => {
     const calleeId = data.calleeId;
     const sdpOffer = data.sdpOffer;
@@ -149,10 +156,9 @@ const handleCall = (socket) => {
     socket.to(calleeId).emit("newCall", {
       callerId: socket.user,
       sdpOffer: sdpOffer,
-      callerInfo: userInfo, 
+      callerInfo: userInfo,
     });
   });
-    
 
   socket.on("answerCall", (data) => {
     let callerId = data.callerId;
@@ -174,23 +180,26 @@ const handleCall = (socket) => {
     });
   });
 
-  socket.on("end_call", (data) =>{
+  socket.on("end_call", (data) => {
     let calleeId = data.calleeId;
 
     socket.to(calleeId).emit("end_call_noti", {
       sender: socket.user,
     });
-  })
-}
+  });
+};
 
 const handleNotiForUser = async (data, userId) => {
-  await io.to(`user_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_NOTIFICATION, data);
-}
+  await io
+    .to(`user_${userId.toString()}`)
+    .emit(SUB_EVENT_RECEIVE_NOTIFICATION, data);
+};
 
 const handleNotiForPost = async (data, postId) => {
-  await io.to(`post_${postId}`).emit(`${SUB_EVENT_SEND_NOTIFICATION_POST}_${postId}`, data);
-}
-
+  await io
+    .to(`post_${postId}`)
+    .emit(`${SUB_EVENT_SEND_NOTIFICATION_POST}_${postId}`, data);
+};
 
 const handleRoomNotiForPost = (socket) => {
   socket.on("join_post_noti", async (data) => {
@@ -206,8 +215,7 @@ const handleRoomNotiForPost = (socket) => {
       socket.leave(`post_${postId}`);
     }
   });
-}
-
+};
 
 const onEachUserConnection = (socket) => {
   const fromUserId = socket.handshake.query.userId;
@@ -215,7 +223,7 @@ const onEachUserConnection = (socket) => {
   socket.join(fromUserId);
   addUserToMap(fromUserId, socket.id);
   console.log("🚀 ~ user conneect success:", fromUserId);
-  
+
   handleRoom(socket);
   handleCall(socket);
   handleRoomNotiForPost(socket);
@@ -224,4 +232,9 @@ const onEachUserConnection = (socket) => {
   onDisconnected(socket);
 };
 
-module.exports = { setupSocketServer, handleNotiForUser, handleNotiForPost, listUserOnline };
+module.exports = {
+  setupSocketServer,
+  handleNotiForUser,
+  handleNotiForPost,
+  listUserOnline,
+};
