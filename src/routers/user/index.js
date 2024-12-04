@@ -22,6 +22,7 @@ router.use(authentication)
 
 router.get('/get-token-stringee', asyncHandler(userController.getTokenStringee))
 router.get('/get-user-info', asyncHandler(userController.getUserInfo))
+router.get('/get-user-online', asyncHandler(userController.getUserOnline))
 router.get('/get-post-of-user', asyncHandler(userController.getPostOfUser))
 router.get('/search-user', asyncHandler(userController.searchUser))
 

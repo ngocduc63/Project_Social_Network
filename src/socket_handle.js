@@ -35,7 +35,19 @@ const setupSocketServer = (server) => {
 
 const addUserToMap = (userId, socketId) => {
   userMap.set(userId, socketId);
+  notiUserOnline();
 };
+
+const notiUserOnline = () => {
+  const userOnline = listUserOnline();
+  for (const userId of userOnline) {
+    io.to(`user_${userId.toString()}`).emit('user_online', userOnline);
+  }
+}
+
+const listUserOnline = () => {
+  return [...userMap.keys()]
+}
 
 const removeUserWithSocketIdFromMap = (socketId) => {
   for (const [userId, id] of userMap.entries()) {
@@ -44,6 +56,7 @@ const removeUserWithSocketIdFromMap = (socketId) => {
       break;
     }
   }
+  notiUserOnline();
 };
 
 const isUserOnline = (userId) => {
@@ -211,4 +224,4 @@ const onEachUserConnection = (socket) => {
   onDisconnected(socket);
 };
 
-module.exports = { setupSocketServer, handleNotiForUser, handleNotiForPost };
+module.exports = { setupSocketServer, handleNotiForUser, handleNotiForPost, listUserOnline };

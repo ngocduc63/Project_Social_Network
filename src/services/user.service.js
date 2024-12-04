@@ -17,6 +17,7 @@ const CommonService = require("./common.service");
 const FriendService = require("./friend.service");
 const { FRIEND_STATUS } = require("../utils/const.user");
 const { POST_STATUS_TYPES } = require("../utils/const.post");
+const { listUserOnline } = require("../socket_handle");
 
 class UserService {
   static findByEmail = async ({
@@ -336,13 +337,16 @@ class UserService {
     const rs = [];
     for (let user of users) {
       const friendId = user._id.toString();
-      const countMutual = await FriendService.countMutualFriend(userId, friendId);
+      const countMutual = await FriendService.countMutualFriend(
+        userId,
+        friendId
+      );
       rs.push({
-        '_id': user._id,
-        'avatar': user.avatar,
-        'name': user.name,
-        'countMutual': countMutual,
-      })
+        _id: user._id,
+        avatar: user.avatar,
+        name: user.name,
+        countMutual: countMutual,
+      });
     }
 
     return {
@@ -351,6 +355,37 @@ class UserService {
       totalPage: Math.ceil(totalUsers / limit),
       totalUsers: totalUsers,
     };
+  };
+
+  static getUserOnline = async (keyStore) => {
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+
+    const users = listUserOnline();
+    const rs = Promise.all(
+      users.map(async (friendId) => {
+        if (friendId === userId) return;
+        const checkFriend = await FriendService.checkFriendExits(
+          userId,
+          friendId
+        );
+
+        const isFriend = checkFriend?.friend_status === FRIEND_STATUS.FRIEND;
+        const userInfo = await userModel
+          .findById(convertToObjectIdMongodb(friendId))
+          .lean();
+
+        if(!userInfo) return;
+
+        return {
+          _id: userInfo._id.toString(),
+          name: userInfo.name,
+          avatar: userInfo.avatar,
+          friendStatus: isFriend,
+        };
+      })
+    );
+
+    return rs;
   };
 
   static changePassword = async ({ newPassword, lastPassWord }, keyStore) => {
