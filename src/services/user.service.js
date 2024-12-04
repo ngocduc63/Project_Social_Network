@@ -380,7 +380,7 @@ class UserService {
           _id: userInfo._id.toString(),
           name: userInfo.name,
           avatar: userInfo.avatar,
-          friendStatus: isFriend,
+          isFriend: isFriend,
         };
       })
     );
