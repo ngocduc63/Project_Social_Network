@@ -123,9 +123,19 @@ class FriendService {
         $project: {
           mutualFriends: {
             $setIntersection: [
-              { $ifNull: [{ $arrayElemAt: ["$user1Friends.user1Friends", 0] }, []] },
-              { $ifNull: [{ $arrayElemAt: ["$user2Friends.user2Friends", 0] }, []] }
-            ]
+              {
+                $ifNull: [
+                  { $arrayElemAt: ["$user1Friends.user1Friends", 0] },
+                  [],
+                ],
+              },
+              {
+                $ifNull: [
+                  { $arrayElemAt: ["$user2Friends.user2Friends", 0] },
+                  [],
+                ],
+              },
+            ],
           },
         },
       },
@@ -308,6 +318,7 @@ class FriendService {
       $or: [{ created_by_user: friendId }, { friend_userId: friendId }],
       friend_status: FRIEND_STATUS.FRIEND,
     })
+      .sort({ updatedAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
 
@@ -338,6 +349,7 @@ class FriendService {
         path: "created_by_user",
         select: "name avatar",
       })
+      .sort({ updatedAt: -1 })
       .skip(skip)
       .limit(limit);
 
@@ -351,12 +363,12 @@ class FriendService {
       const friendId = friend.created_by_user._id.toString();
       const countMutual = await this.countMutualFriend(userId, friendId);
       rs.push({
-        '_id': friend._id,
-        'created_by_user': friend.created_by_user,
-        'friend_userId': friend.friend_userId,
-        'createdAt': friend.createdAt,
-        'countMutual': countMutual,
-      })
+        _id: friend._id,
+        created_by_user: friend.created_by_user,
+        friend_userId: friend.friend_userId,
+        createdAt: friend.updatedAt,
+        countMutual: countMutual,
+      });
     }
 
     return {
