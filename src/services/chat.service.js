@@ -15,7 +15,7 @@ class ChatService {
     return data;
   }
 
-  static async createGroupChat({members, roomName = ""}, keyStore){
+  static async createGroupChat({ members, roomName = "" }, keyStore) {
     const userId = await CommonService.getUserIdByKeyStore(keyStore);
     const data = await this.createRoomChat(userId, members, roomName);
 
@@ -157,6 +157,71 @@ class ChatService {
       messTotal,
     };
   }
+
+  static async updateImageRoom(body, file, keyStore) {
+    if (!file) throw new NotFoundError("file not found");
+
+    const data = JSON.parse(body.data);
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+    const roomId = data.roomId;
+
+    const imagePath = await uploadFileToGGDrive(file);
+    const dataRoom = await roomModel.findOneAndUpdate(
+      {
+        _id: roomId,
+        created_by_user: userId,
+      },
+      {
+        $set: {
+          image_room: imagePath,
+        },
+      },
+      {
+        returnDocument: "after",
+      }
+    );
+
+    const rs = this.getDataRoom(dataRoom);
+
+    return rs;
+  }
+
+  static async userLeaveRoom({ friendId, roomId }, keyStore) {
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+
+    const result = await roomModel.updateOne(
+      { _id: roomId },
+      { $pull: { room_members: friendId } }
+    );
+
+    if (result.modifiedCount <= 0) {
+      throw new NotFoundError("user not found in room");
+    }
+
+    // if userId ==  create_by_user : .....
+
+    // noti in room
+
+    return true;
+  }
+
+  static async getMembersinRoom({ roomId }, keyStore) {
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+    const roomData = await roomModel.findById(roomId).populate({
+      path: "room_members",
+      select: "_id name avatar",
+    });
+    const rs = roomData.room_members.map((member) => {
+      return {
+        ...member.toObject(),
+        bio: member._id.equals(roomData.created_by_user)
+          ? "Chủ phòng"
+          : "Thành viên",
+      };
+    });
+
+    return rs;
+  }  
 }
 
 module.exports = ChatService;

@@ -23,6 +23,21 @@ class ChatConstroller {
     const metadata = await ChatService.getListMessage(req.body);
     new SuccessResponse(metadata).send(res);
   };
+
+  updateImageRoom = async (req, res, next) => {
+    const metadata = await ChatService.updateImageRoom(req.body, req.keyStore, req.files);
+    new SuccessResponse(metadata, "update image success").send(res);
+  };
+
+  userLeaveRooom =  async (req, res, next) => {
+    const metadata = await ChatService.userLeaveRoom(req.body, req.keyStore);
+    new SuccessResponse(metadata, 'leave room success').send(res);
+  }
+
+  getMembersInRoom = async (req, res, next) => {
+    const metadata = await ChatService.getMembersinRoom(req.body, req.keyStore);
+    new SuccessResponse(metadata).send(res);
+  }
 }
 
 module.exports = new ChatConstroller();
