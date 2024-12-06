@@ -25,7 +25,7 @@ class ChatConstroller {
   };
 
   updateImageRoom = async (req, res, next) => {
-    const metadata = await ChatService.updateImageRoom(req.body, req.keyStore, req.files);
+    const metadata = await ChatService.updateImageRoom(req.body, req.file, req.keyStore);
     new SuccessResponse(metadata, "update image success").send(res);
   };
 

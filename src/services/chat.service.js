@@ -2,7 +2,7 @@ const { isTypedArray } = require("lodash");
 const messageModel = require("../models/message.model");
 const roomModel = require("../models/room.model");
 const CommonService = require("./common.service");
-const { convertToObjectIdMongodb } = require("../utils");
+const { convertToObjectIdMongodb, uploadFileToGGDrive } = require("../utils");
 const { NotFoundError } = require("../core/error.response");
 
 class ChatService {
@@ -180,6 +180,8 @@ class ChatService {
         returnDocument: "after",
       }
     );
+
+    if(!dataRoom) throw new NotFoundError('user not admin')
 
     const rs = this.getDataRoom(dataRoom);
 

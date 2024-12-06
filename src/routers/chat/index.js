@@ -7,8 +7,8 @@ const { apiKey, permission } = require('../../auth/checkAuth');
 const { uploadFileHandler } = require('../../helpers/uploadFIleHandler');
 const chatController = require('../../controllers/chat.controller');
 
-const router =  express.Router()
 const upload = uploadFileHandler()
+const router =  express.Router()
 
 //check apikey
 router.use(apiKey)
