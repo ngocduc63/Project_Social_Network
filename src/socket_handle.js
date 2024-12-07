@@ -78,12 +78,12 @@ const onMessage = (socket) => {
   });
 };
 
-const createAndNotiMess = async (roomId, content, sender, type) => {
+const createAndNotiMess = async (roomId, content, sender, type='text') => {
   const { rsMess, rsRoom } = await ChatService.createMessage(
     roomId,
     sender,
     content,
-    (type = "text")
+    type 
   );
 
   // noti for room
