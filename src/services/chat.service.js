@@ -202,6 +202,8 @@ class ChatService {
       throw new NotFoundError("User not admin");
     }
 
+    await createAndNotiMess(roomId, `đã đổi tên nhóm thành ${name}`, userId, "noti");
+
     return true;
   }
 
