@@ -4,6 +4,7 @@ const roomModel = require("../models/room.model");
 const CommonService = require("./common.service");
 const { convertToObjectIdMongodb, uploadFileToGGDrive } = require("../utils");
 const { NotFoundError } = require("../core/error.response");
+const { createAndNotiMess } = require("../socket_handle");
 
 class ChatService {
   static async createRoomChat(userId, members, roomName = "") {
@@ -181,11 +182,69 @@ class ChatService {
       }
     );
 
-    if(!dataRoom) throw new NotFoundError('user not admin')
+    if (!dataRoom) throw new NotFoundError("user not admin");
 
     const rs = this.getDataRoom(dataRoom);
+    await createAndNotiMess(roomId, "đã cập nhật ảnh nhóm", userId, "noti");
 
     return rs;
+  }
+
+  static async updateNameRoom({ roomId, name }, keyStore) {
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+
+    const result = await roomModel.updateOne(
+      { _id: roomId, created_by_user: userId },
+      { $set: { room_name: name } }
+    );
+
+    if (result.modifiedCount <= 0) {
+      throw new NotFoundError("User not admin");
+    }
+
+    return true;
+  }
+
+  static async addUsersToRoom({ roomId, userIds }, keyStore) {
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+    const room = await roomModel.findById(roomId);
+    if (!room) {
+      throw new NotFoundError("Room not found");
+    }
+
+    const result = await roomModel.updateOne(
+      { _id: roomId, created_by_user: userId },
+      { $addToSet: { room_members: { $each: userIds } } }
+    );
+
+    if (result.modifiedCount <= 0) {
+      throw new Error("No users were added, they may already be in the group");
+    }
+    await createAndNotiMess(roomId, `đã thêm ${user.length} thành viên`, userId, "noti");
+
+    return true;
+  }
+
+  static async removeUsersFromGroup({ roomId, userIds }, keyStore) {
+    const userId = await CommonService.getUserIdByKeyStore(keyStore);
+
+    const room = await roomModel.findById(roomId);
+    if (!room) {
+      throw new NotFoundError("Room not found");
+    }
+
+    const result = await roomModel.updateOne(
+      { _id: roomId, created_by_user: userId },
+      { $pullAll: { room_members: userIds } }
+    );
+
+    if (result.modifiedCount <= 0) {
+      throw new Error("No users were removed, they may not exist in the group");
+    }
+
+    await createAndNotiMess(roomId, `đã xoá ${user.length} thành viên`, userId, "noti");
+
+    return true;
   }
 
   static async userLeaveRoom({ friendId, roomId }, keyStore) {
@@ -197,12 +256,27 @@ class ChatService {
     );
 
     if (result.modifiedCount <= 0) {
-      throw new NotFoundError("user not found in room");
+      throw new NotFoundError("User not found in room");
     }
 
-    // if userId ==  create_by_user : .....
+    const room = await roomModel.findById(roomId);
 
-    // noti in room
+    if (userId === room.created_by_user.toString()) {
+      const newCreator =
+        room.room_members.length > 0 ? room.room_members[0] : null;
+
+      if (newCreator) {
+        await roomModel.updateOne(
+          { _id: roomId },
+          { $set: { created_by_user: newCreator } }
+        );
+      } else {
+        await roomModel.deleteOne({ _id: roomId });
+        return true;
+      }
+    }
+
+    await createAndNotiMess(roomId, "đã rời nhóm", userId, "noti");
 
     return true;
   }
@@ -223,7 +297,7 @@ class ChatService {
     });
 
     return rs;
-  }  
+  }
 }
 
 module.exports = ChatService;

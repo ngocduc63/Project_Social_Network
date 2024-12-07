@@ -74,26 +74,32 @@ const checkOnline = (socket) => {
 const onMessage = (socket) => {
   socket.on(EVENT_SINGLE_CHAT_MESSAGE, async (chatMessage) => {
     const { roomId, content, sender, type } = chatMessage;
-    const { rsMess, rsRoom } = await ChatService.createMessage(
-      roomId,
-      sender,
-      content
-    );
-    // noti for room
-    io.to(roomId).emit(SUB_EVENT_RECEIVE_MESSAGE, rsMess);
-
-    // noti for user
-    for (const userId of rsRoom.room_members) {
-      io.to(`chat_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_ROOM, rsRoom);
-      const dataNotiForUser = {
-        data: rsRoom,
-        noti_type: "message",
-      };
-      if (userId.toString() !== sender) {
-        handleNotiForUser(dataNotiForUser, userId);
-      }
-    }
+    await createAndNotiMess(roomId, content, sender);
   });
+};
+
+const createAndNotiMess = async (roomId, content, sender, type) => {
+  const { rsMess, rsRoom } = await ChatService.createMessage(
+    roomId,
+    sender,
+    content,
+    (type = "text")
+  );
+
+  // noti for room
+  io.to(roomId).emit(SUB_EVENT_RECEIVE_MESSAGE, rsMess);
+
+  // noti for user
+  for (const userId of rsRoom.room_members) {
+    io.to(`chat_${userId.toString()}`).emit(SUB_EVENT_RECEIVE_ROOM, rsRoom);
+    const dataNotiForUser = {
+      data: rsRoom,
+      noti_type: "message",
+    };
+    if (userId.toString() !== sender) {
+      handleNotiForUser(dataNotiForUser, userId);
+    }
+  }
 };
 
 const onDisconnected = (socket) => {
@@ -133,7 +139,7 @@ const handleRoom = (socket) => {
   socket.on("join_noti_for_user", (data) => {
     const { userId } = data;
     socket.join(`user_${userId}`);
-    
+
     const userOnline = listUserOnline();
     io.to(`user_${userId}`).emit("user_online", userOnline);
   });
@@ -237,4 +243,5 @@ module.exports = {
   handleNotiForUser,
   handleNotiForPost,
   listUserOnline,
+  createAndNotiMess
 };

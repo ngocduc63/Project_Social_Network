@@ -14,6 +14,21 @@ class ChatConstroller {
     new SuccessResponse(metadata).send(res);
   };
 
+  updateNameRoom = async (req, res, next) => {
+    const metadata = await ChatService.updateNameRoom(req.body, req.keyStore);
+    new SuccessResponse(metadata).send(res);
+  };
+
+  addUsersToRoom = async (req, res, next) => {
+    const metadata = await ChatService.addUsersToRoom(req.body, req.keyStore);
+    new SuccessResponse(metadata).send(res);
+  };
+
+  removeUsersFromGroup = async (req, res, next) => {
+    const metadata = await ChatService.removeUsersFromGroup(req.body, req.keyStore);
+    new SuccessResponse(metadata).send(res);
+  };
+
   getRoom = async (req, res, next) => {
     const metadata = await ChatService.getRoom(req.body, req.keyStore);
     new SuccessResponse(metadata).send(res);

@@ -13,7 +13,7 @@ var messageSchema = new Schema(
       content: { type: String, trim: true },
       type: {
         type: String,
-        enum: ["text", "image", "video", "audio"],
+        enum: ["text", "image", "video", "audio", 'noti'],
         default: "text",
       },
     },
