@@ -11,7 +11,6 @@ const SUB_EVENT_SEND_NOTIFICATION_POST = "notification_for_post";
 const ON_CONNECTION = "connection";
 
 const { Server } = require("socket.io");
-const ChatService = require("./services/chat.service");
 const CommonService = require("./services/common.service");
 
 let io;
@@ -79,7 +78,7 @@ const onMessage = (socket) => {
 };
 
 const createAndNotiMess = async (roomId, content, sender, type='text') => {
-  const { rsMess, rsRoom } = await ChatService.createMessage(
+  const { rsMess, rsRoom } = await CommonService.createMessage(
     roomId,
     sender,
     content,
