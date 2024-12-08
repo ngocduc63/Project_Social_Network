@@ -222,7 +222,7 @@ class ChatService {
     if (result.modifiedCount <= 0) {
       throw new Error("No users were added, they may already be in the group");
     }
-    await createAndNotiMess(roomId, `đã thêm ${user.length} thành viên`, userId, "noti");
+    await createAndNotiMess(roomId, `đã thêm ${userIds.length} thành viên`, userId, "noti");
 
     return true;
   }
@@ -244,7 +244,7 @@ class ChatService {
       throw new Error("No users were removed, they may not exist in the group");
     }
 
-    await createAndNotiMess(roomId, `đã xoá ${user.length} thành viên`, userId, "noti");
+    await createAndNotiMess(roomId, `đã xoá ${userIds.length} thành viên`, userId, "noti");
 
     return true;
   }
