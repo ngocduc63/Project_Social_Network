@@ -7,6 +7,7 @@ const PostService = require("./post.service");
 const NotificationService = require("./notification.service");
 const CommonService = require("./common.service");
 const { NOTIFICATION_TYPES } = require("../utils/const.notification");
+const { handleNotiForComment } = require("../socket_handle");
 
 class CommemtService {
   static async createComment({ postId, content, parentCommentId }, keyStore) {
@@ -92,7 +93,7 @@ class CommemtService {
     dataRes.postId = comment.comment_postId;
     dataRes.countChildComment = 0;
 
-    return getInfoData({
+    const rs = getInfoData({
       fileds: [
         "_id",
         "user",
@@ -100,9 +101,14 @@ class CommemtService {
         "postId",
         "createdAt",
         "countChildComment",
+        'commnet_parentId',
       ],
       object: dataRes,
     });
+
+    await handleNotiForComment(rs, postId);
+
+    return rs
   }
 
   static async findCommentByParentId(

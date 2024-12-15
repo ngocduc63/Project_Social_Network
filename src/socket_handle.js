@@ -206,6 +206,12 @@ const handleNotiForPost = async (data, postId) => {
     .emit(`${SUB_EVENT_SEND_NOTIFICATION_POST}_${postId}`, data);
 };
 
+const handleNotiForComment = async (data, postId) => {
+  await io
+    .to(`post_comment_${postId}`)
+    .emit(`${'noti_for_post_comment'}_${postId}`, data);
+};
+
 const handleRoomNotiForPost = (socket) => {
   socket.on("join_post_noti", async (data) => {
     const { postId } = data;
@@ -218,6 +224,20 @@ const handleRoomNotiForPost = (socket) => {
     const { postId } = data;
     if (socket.rooms.has(`post_${postId}`)) {
       socket.leave(`post_${postId}`);
+    }
+  });
+};
+
+const handleRoomNotiForComment = (socket) => {
+  socket.on("join_comment_noti", async (data) => {
+    const { postId } = data;
+    socket.join(`post_comment_${postId}`);
+  });
+
+  socket.on("leave_comment_noti", (data) => {
+    const { postId } = data;
+    if (socket.rooms.has(`post_comment_${postId}`)) {
+      socket.leave(`post_comment_${postId}`);
     }
   });
 };
@@ -235,6 +255,7 @@ const onEachUserConnection = (socket) => {
   onMessage(socket);
   checkOnline(socket);
   onDisconnected(socket);
+  handleRoomNotiForComment(socket);
 };
 
 module.exports = {
@@ -242,5 +263,6 @@ module.exports = {
   handleNotiForUser,
   handleNotiForPost,
   listUserOnline,
-  createAndNotiMess
+  createAndNotiMess,
+  handleNotiForComment
 };
