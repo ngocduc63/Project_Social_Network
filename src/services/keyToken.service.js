@@ -23,8 +23,6 @@ class KeyTokenService {
     
       const tokens = await keytokenModel.findOneAndUpdate(filter, update, options);
       
-      console.log('first111', tokens)
-
       return tokens ? tokens.publicKey : null;
     } catch (error) {
       console.error("Error updating refresh token:", error); // Better error logging

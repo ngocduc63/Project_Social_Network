@@ -80,7 +80,7 @@ class AccessService {
     return delKey;
   };
 
-  static login = async ({ email, password, refreshToken = null }) => {
+  static login = async ({ email, password}) => {
     //1- check email in dbs
     const foundUser = await userService.findByEmail({ email });
     if (!foundUser) throw new BadRequestError("Shop not registered!");
@@ -130,7 +130,7 @@ class AccessService {
 
     const holedUser = await userModel.findOne({ email }).lean();
 
-    if (holedUser) throw new BadRequestError("Error: Shop already registered!");
+    if (holedUser) throw new BadRequestError("Error: User already registered!");
 
     const passwordHash = await bcrypt.hash(password, 10);
 

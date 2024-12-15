@@ -2,7 +2,6 @@
 
 const apikeyModel = require("../models/apikey.model");
 const crypto = require("crypto");
-const { convertToObjectIdMongodb } = require("../utils");
 
 const findById = async (key) => {
   //   console.log("key", key);
